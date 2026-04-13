@@ -1,0 +1,302 @@
+---
+alwaysApply: true
+---
+
+# Regras do Cursor para BLIS Hub Site
+
+## Contexto do Projeto
+
+- Frontend React + TypeScript com Vite
+- Arquitetura modular seguindo padrão da API
+- **Material UI (MUI)** para componentes de UI — documentação oficial: [Material UI - Getting started](https://mui.com/material-ui/getting-started/). Usar componentes e padrões do MUI; customizar via `sx`, `theme` ou `styled()` quando necessário.
+- React Router para roteamento
+- Axios para chamadas HTTP
+- Zustand para gerenciamento de estado
+- Autenticação JWT
+
+### UI e tipografia
+
+- Componentes de interface: preferir os do **Material UI** (Box, Typography, Button, TextField, Alert, etc.). Consultar a [documentação do MUI](https://mui.com/material-ui/getting-started/) para API e exemplos.
+- **Tipografia e fonte global:** definir no tema centralizado em `config/muiTheme.ts` (família de fonte, tamanhos, pesos). Evitar fontes inline; usar o tema para manter consistência no projeto.
+
+## Arquitetura de Pastas (`src/`)
+
+Organizamos o frontend seguindo o padrão do painel administrativo, com camadas bem separadas:
+
+```
+src/
+├── app/                    # Camada de rotas/layout (layouts + Outlet)
+│   ├── RootLayout.tsx      # Providers (theme, auth, menu), estilos globais
+│   └── DashboardLayout.tsx # Header + Sidebar + Main (área logada)
+├── screens/                # Telas (uma pasta por módulo/entidade)
+│   ├── login/              # Tela de login
+│   └── users/              # Módulo de usuários (padrão para novos recursos)
+│       ├── index.tsx       # Lista: chama service, passa dados ao componente
+│       ├── manage/         # Telas criar/editar (um arquivo por tela, form dentro do script)
+│       │   ├── create.tsx  # Tela + formulário de criação no mesmo arquivo
+│       │   └── edit.tsx    # Tela + formulário de edição no mesmo arquivo (?id=)
+│       ├── components/     # UserList, UserCard (sem form compartilhado)
+│       ├── services/       # users.service.ts (chamadas à API)
+│       └── types/          # users.types.ts
+├── components/             # Componentes compartilhados
+│   ├── header/             # AppBar do dashboard
+│   ├── sidebar/            # Menu lateral (itens por rota)
+│   ├── main/               # Wrapper principal com <Outlet/>
+│   ├── BlisMascot.tsx      # Mascote animado da tela de login
+│   └── PrivateRoute.tsx    # Protege rotas do dashboard
+├── services/               # Serviços globais
+│   ├── api.ts              # Cliente axios (VITE_API_URL, interceptors)
+│   └── auth.service.ts     # Login/logout, token e usuário
+├── providers/              # Estado global (Context API)
+│   ├── AuthProvider.tsx    # useAuth (usuário, login/logout, isAuthenticated)
+│   └── useMenu.tsx         # useMenu (sidebar aberta/fechada)
+├── config/                 # Configurações de UI
+│   └── muiTheme.ts         # Tema MUI centralizado
+├── utils/                  # Funções puras e helpers
+│   └── index.ts
+├── assets/                 # Recursos estáticos
+│   ├── images/
+│   └── styles/
+│       └── global.css      # Estilos globais importados em RootLayout
+├── App.tsx                 # Definição de rotas (React Router)
+└── main.tsx                # Bootstrap (ReactDOM + BrowserRouter)
+```
+
+### Convenções de Rotas e Screens
+
+- **Rotas públicas**:
+  - `/` → tela de login (`screens/login/index.tsx`)
+- **Área logada (dashboard)**:
+  - `/dashboard` → redirect para `/dashboard/usuarios`
+  - `/dashboard/usuarios` → listagem de usuários (`screens/users/index.tsx`)
+  - `/dashboard/usuarios/create` → criar usuário (`screens/users/manage/create.tsx`)
+  - `/dashboard/usuarios/edit?id=xxx` → editar usuário existente (`screens/users/manage/edit.tsx`)
+- **Layouts**:
+
+  - `RootLayout` aplica ThemeProvider, AuthProvider, MenuProvider e estilos globais.
+  - `DashboardLayout` compõe `Header + Sidebar + Main` e expõe `<Outlet />` no `Main`.
+
+- **Não usar** as pastas `pages/`, `modules/` nem `context/`. Usar **screens/** para telas e **providers/** para estado global (Context).
+- Ao criar novos recursos: sempre `screens/{recurso}/`.
+
+## Padrões de Código
+
+- Sempre usar TypeScript strict
+- **NUNCA usar `any` - sempre tipar explicitamente ou usar `unknown`**
+- Sempre tipar props de componentes, parâmetros de função, retornos e estado
+- Usar tipos inferidos apenas quando óbvio e seguro
+- Componentes funcionais com hooks
+- Usar React.FC ou tipar explicitamente o retorno JSX.Element
+- Prefixar parâmetros não usados com \_
+
+## Estrutura de um recurso (em `screens/`)
+
+Não usamos as pastas `pages/`, `modules/` nem `context/`. Telas ficam em **screens/** e estado global em **providers/**. Cada recurso em `screens/{recurso}/` segue o padrão do módulo **users**:
+
+- `index.tsx` - Tela de listagem (chama o service na própria tela com useState/useEffect e passa dados aos componentes)
+- `manage/create.tsx` - Tela de criação em um único arquivo: título, formulário, estado e submit (tudo no mesmo script; não criar create-form.tsx separado)
+- `manage/edit.tsx` - Tela de edição em um único arquivo: carrega item com o service (query `?id=`), formulário, estado e submit (tudo no mesmo script; não criar edit-form.tsx separado)
+- `components/` - Componentes do recurso (ex.: lista, card); formulários ficam dentro de create.tsx e edit.tsx
+- `services/` - Chamadas à API centralizadas ({nome}.service.ts)
+- `types/` - Tipos TypeScript ({nome}.types.ts)
+- `utils/` - Utilitários do recurso (opcional)
+
+**Não** usar pasta `hooks/` por recurso: as chamadas à API são feitas direto na tela ou no componente, usando o **service**.
+
+## Fluxo de Dados
+
+```
+Screen ou Component → Service → API
+         ↓
+    Providers (useAuth, useMenu) quando necessário
+```
+
+## Convenções
+
+- **Componentes**: PascalCase.tsx (ex: `UserList.tsx`)
+- **Services**: `{nome}.service.ts` (ex: `users.service.ts`)
+- **Types**: `{nome}.types.ts` (ex: `users.types.ts`)
+- **Utils**: `{nome}.utils.ts` (ex: `users.utils.ts`)
+- **Variáveis/funções**: camelCase
+- **Interfaces/Types**: PascalCase
+- **Constantes**: UPPER_SNAKE_CASE
+
+## Componentes React
+
+### Estrutura de Componente
+
+A tela (index ou manage/create ou manage/edit) chama o service. Na listagem, dados são passados por props aos componentes. Em create.tsx e edit.tsx, o formulário fica no mesmo arquivo e o submit chama o service.
+
+Exemplo de componente de lista (recebe dados da tela):
+
+```typescript
+import type { User } from "../types/users.types";
+import { UserCard } from "./UserCard";
+
+interface UserListProps {
+  users: User[];
+  loading: boolean;
+  error: string | null;
+  refetch?: () => Promise<void>;
+}
+
+export const UserList = ({ users, loading, error }: UserListProps) => {
+  if (loading) return <div>Carregando...</div>;
+  if (error) return <div>Erro: {error}</div>;
+  if (users.length === 0) return <div>Nenhum item encontrado</div>;
+
+  return (
+    <div>
+      {users.map((user) => (
+        <UserCard key={user.id} user={user} />
+      ))}
+    </div>
+  );
+};
+```
+
+Exemplo de tela de listagem (chama o service):
+
+```typescript
+const [users, setUsers] = useState<User[]>([]);
+const [loading, setLoading] = useState(true);
+const [error, setError] = useState<string | null>(null);
+
+const refetch = async () => {
+  try {
+    setLoading(true);
+    setError(null);
+    const data = await usersService.getAll();
+    setUsers(data);
+  } catch (err) {
+    /* tratar erro */
+  } finally {
+    setLoading(false);
+  }
+};
+
+useEffect(() => {
+  refetch();
+}, []);
+
+return (
+  <>
+    <UserList users={users} loading={loading} error={error} refetch={refetch} />
+  </>
+);
+```
+
+### Boas Práticas
+
+- Sempre tipar props com interface ou type
+- Usar destructuring para props
+- Retornar early quando necessário (loading, error)
+- Usar keys únicas em listas
+- Componentes pequenos e focados
+
+## Services (Chamadas à API)
+
+### Estrutura de Service
+
+```typescript
+import { api } from "../../../services/api";
+import { User, CreateUserData, UpdateUserData } from "../types/users.types";
+
+export const usersService = {
+  getAll: async (): Promise<User[]> => {
+    const response = await api.get<User[]>("/api/web/users");
+    return response.data;
+  },
+
+  getById: async (id: string): Promise<User> => {
+    const response = await api.get<User>(`/api/web/users/${id}`);
+    return response.data;
+  },
+
+  create: async (data: CreateUserData): Promise<User> => {
+    const response = await api.post<User>("/api/web/users", data);
+    return response.data;
+  },
+
+  update: async (id: string, data: UpdateUserData): Promise<User> => {
+    const response = await api.put<User>(`/api/web/users/${id}`, data);
+    return response.data;
+  },
+
+  delete: async (id: string): Promise<void> => {
+    await api.delete(`/api/web/users/${id}`);
+  },
+};
+```
+
+### Boas Práticas
+
+- Sempre tipar parâmetros e retornos
+- Usar async/await
+- Retornar apenas os dados (response.data)
+- Agrupar métodos relacionados em objeto
+
+## Tratamento de Erros
+
+- Sempre tratar erros em try/catch
+- Mostrar mensagens de erro amigáveis ao usuário
+- Logar erros no console em desenvolvimento
+- Usar estados de loading e error na tela ou no componente que chama o service
+- Não expor detalhes técnicos de erro ao usuário
+
+## Imports
+
+Ordem de imports:
+
+1. Bibliotecas externas (react, react-router-dom, etc)
+2. Bibliotecas de UI (Material-UI, etc)
+3. Imports internos globais (services, utils, hooks globais, types globais)
+4. Imports do módulo (components, hooks, services, types do módulo)
+5. Tipos (quando necessário importar apenas tipos, usar `import type`)
+
+```typescript
+// 1. Externas
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+
+// 2. UI Libraries
+import { Button, TextField } from "@mui/material";
+
+// 3. Internas globais
+import { api } from "@/services/api";
+import { useAuth } from "@/providers/AuthProvider";
+
+// 4. Módulo
+import { usersService } from "../services/users.service";
+import { UserCard } from "../components/UserCard";
+import type { User } from "../types/users.types";
+```
+
+## Roteamento
+
+- Usar React Router v6
+- Rotas definidas em App.tsx ou arquivo de rotas separado
+- Usar componentes de rota protegida para autenticação
+- Lazy loading para rotas quando aplicável
+
+## Estado Global
+
+- Estado global fica em **providers/** (não usar pasta `context/`): AuthProvider (useAuth), useMenu (sidebar).
+- Para novo estado compartilhado: criar provider em `providers/` e usar o hook correspondente.
+- Estado local com useState quando possível. Evitar prop drilling.
+
+## Segurança
+
+- Nunca armazenar tokens em código
+- Usar localStorage para tokens (com cuidado)
+- Validar dados antes de enviar à API
+- Sanitizar inputs do usuário
+- Usar HTTPS em produção
+
+## Performance
+
+- Usar React.memo para componentes pesados
+- useMemo e useCallback quando necessário
+- Lazy loading de rotas e componentes grandes
+- Evitar re-renders desnecessários
+- Otimizar listas grandes com virtualização se necessário

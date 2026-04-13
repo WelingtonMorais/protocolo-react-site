@@ -1,0 +1,249 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  font-family: 'Inter', 'Roboto', sans-serif;
+  background-color: #F7F5FF;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom cursor only on real pointer devices (mouse/trackpad) */
+@media (pointer: fine) {
+  body {
+    cursor: none;
+  }
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ── Scrollbar ─────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(96, 52, 225, 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(96, 52, 225, 0.6);
+}
+
+/* ── Custom Cursor (Montfort style) ────────────────── */
+.cursor {
+  pointer-events: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 99999;
+  mix-blend-mode: normal;
+}
+
+.cursor-circle {
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  border: 1.5px solid rgba(96, 52, 225, 0.6);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.3s, height 0.3s, border-color 0.3s, opacity 0.3s;
+  will-change: transform;
+}
+
+.cursor-dot {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: #6034E1;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  will-change: transform;
+}
+
+.cursor-dot-left,
+.cursor-dot-right {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: rgba(96, 52, 225, 0.5);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  will-change: transform;
+  transition: opacity 0.3s;
+  opacity: 0;
+}
+
+body.cursor-hovering .cursor-circle {
+  width: 52px;
+  height: 52px;
+  border-color: rgba(96, 52, 225, 0.9);
+  background: rgba(96, 52, 225, 0.05);
+}
+
+body.cursor-hovering .cursor-dot-left,
+body.cursor-hovering .cursor-dot-right {
+  opacity: 1;
+}
+
+body.cursor-clicking .cursor-circle {
+  width: 24px;
+  height: 24px;
+  background: rgba(96, 52, 225, 0.15);
+}
+
+/* ── Montfort: Title word-reveal animation ─────────── */
+.split-title-word {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+  margin-right: 0.25em;
+}
+
+.split-title-inner {
+  display: inline-block;
+  animation: revealTitle 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+}
+
+@keyframes revealTitle {
+  from {
+    transform: translateY(105%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* ── Montfort: FadeIn animation ────────────────────── */
+@keyframes fadeInUp {
+  from {
+    transform: translateY(40px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* ── Montfort: Line draw animation ────────────────── */
+@keyframes lineReveal {
+  from {
+    transform: scaleX(0);
+    transform-origin: left center;
+  }
+  to {
+    transform: scaleX(1);
+    transform-origin: left center;
+  }
+}
+
+/* ── Montfort: Hero spinner (SVG orbit) ────────────── */
+@keyframes spinOrbit {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes spinOrbitReverse {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+/* ── Animated background blobs (replaces WebGL) ───── */
+@keyframes blobMove1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(60px, -40px) scale(1.1); }
+  66% { transform: translate(-30px, 50px) scale(0.95); }
+}
+
+@keyframes blobMove2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(-50px, 60px) scale(0.9); }
+  66% { transform: translate(40px, -30px) scale(1.05); }
+}
+
+@keyframes blobMove3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, 40px) scale(1.08); }
+  66% { transform: translate(-60px, -20px) scale(0.92); }
+}
+
+@keyframes gridPulse {
+  0%, 100% { opacity: 0.03; }
+  50% { opacity: 0.07; }
+}
+
+/* ── Page transition classes ───────────────────────── */
+.page-enter {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.page-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.page-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.page-exit-active {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* ── Glow utility ──────────────────────────────────── */
+.glow-primary {
+  box-shadow: 0 0 20px rgba(96, 52, 225, 0.4);
+}
+
+/* ── Auth layout ───────────────────────────────────── */
+.auth-side-left {
+  background: #0D0A1A;
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-side-left::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(96,52,225,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(96,52,225,0.06) 1px, transparent 1px);
+  background-size: 40px 40px;
+  animation: gridPulse 4s ease-in-out infinite;
+}
