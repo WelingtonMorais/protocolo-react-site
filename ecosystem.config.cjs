@@ -1,4 +1,4 @@
-/** PM2: build antes — `npm run build` — depois `pm2 start ecosystem.config.cjs` */
+/** PM2: `npm run build` antes. Preview na porta 8080 (nginx protocolocondo → location /). */
 module.exports = {
   apps: [
     {

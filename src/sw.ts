@@ -18,8 +18,8 @@ self.addEventListener('push', (event) => {
 
   const options: NotificationOptions = {
     body: payload.body,
-    icon: '/system/icon-192x192.png',
-    badge: '/system/icon-192x192.png',
+    icon: '/icon-192x192.png',
+    badge: '/icon-192x192.png',
     data: payload.data ?? {},
     requireInteraction: false,
   };
@@ -31,12 +31,12 @@ self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
   const data = event.notification.data as { packageId?: string; url?: string };
-  const targetUrl = data?.url ?? '/system/';
+  const targetUrl = data?.url ?? '/';
 
   event.waitUntil(
     (self.clients as Clients).matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
       for (const client of clientList) {
-        if (client.url.includes('/system/') && 'focus' in client) {
+        if (client.url.includes(self.registration.scope) && 'focus' in client) {
           return (client as WindowClient).focus();
         }
       }
