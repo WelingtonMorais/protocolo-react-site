@@ -105,7 +105,7 @@ export const ForgotPasswordScreen = (): React.JSX.Element => {
         >
           <Link
             component={RouterLink}
-            to="/"
+            to="/login"
             sx={{
               display: "flex",
               alignItems: "center",
@@ -210,7 +210,7 @@ export const ForgotPasswordScreen = (): React.JSX.Element => {
               <Alert severity="success" sx={{ mb: 3, borderRadius: 2 }}>
                 Sua senha foi redefinida com sucesso!
               </Alert>
-              <Button variant="contained" component={RouterLink} to="/" fullWidth size="large" sx={{ height: 52 }}>
+              <Button variant="contained" component={RouterLink} to="/login" fullWidth size="large" sx={{ height: 52 }}>
                 Ir para o login
               </Button>
             </Box>

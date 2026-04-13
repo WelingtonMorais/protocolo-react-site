@@ -8,6 +8,11 @@ import { PrivateRoute } from "./components/PrivateRoute";
 import { RoleRoute } from "./components/RoleRoute";
 import { SplashScreen } from "./components/SplashScreen";
 
+// Landing page
+const LandingPage = lazy(() =>
+  import("./screens/landing/index").then((m) => ({ default: m.LandingPage }))
+);
+
 // Auth screens
 const LoginScreen = lazy(() =>
   import("./screens/login/index").then((m) => ({ default: m.LoginScreen }))
@@ -106,7 +111,8 @@ const App = (): React.JSX.Element => {
         <Routes>
           <Route element={<RootLayout />}>
             {/* Public routes */}
-            <Route path="/" element={<LoginScreen />} />
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<LoginScreen />} />
             <Route path="/cadastro" element={<RegisterScreen />} />
             <Route path="/recuperar-senha" element={<ForgotPasswordScreen />} />
 

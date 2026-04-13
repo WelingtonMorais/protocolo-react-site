@@ -14,5 +14,5 @@ export const PrivateRoute = (): React.JSX.Element => {
     );
   }
 
-  return isAuthenticated ? <Outlet /> : <Navigate to="/" replace />;
+  return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
 };

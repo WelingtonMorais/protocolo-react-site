@@ -158,6 +158,7 @@ export const RegisterScreen = (): React.JSX.Element => {
                     width: 66,
                     height: 66,
                     objectFit: "contain",
+                    borderRadius: "20%",
                     filter: "drop-shadow(0 0 18px rgba(96,52,225,0.45))",
                     position: "relative",
                     zIndex: 1,
@@ -264,7 +265,7 @@ export const RegisterScreen = (): React.JSX.Element => {
         {isMobile && (
           <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, ease: [0.34, 1.56, 0.64, 1] as [number,number,number,number] }}>
-            <Box component="img" src={logoApp} alt="Logo" sx={{ width: 56, height: 56, objectFit: "contain", mb: 2 }} />
+            <Box component="img" src={logoApp} alt="Logo" sx={{ width: 56, height: 56, objectFit: "contain", borderRadius: "20%", mb: 2 }} />
           </motion.div>
         )}
 
@@ -501,7 +502,7 @@ export const RegisterScreen = (): React.JSX.Element => {
           <motion.div {...fadeUp(0.6)}>
             <Typography variant="body2" textAlign="center" mt={3} color="text.secondary">
               Já tem conta?{" "}
-              <Link component={RouterLink} to="/" sx={{ color: "primary.main", fontWeight: 700 }}>
+              <Link component={RouterLink} to="/login" sx={{ color: "primary.main", fontWeight: 700 }}>
                 Entrar
               </Link>
             </Typography>

@@ -428,6 +428,49 @@ body.cursor-clicking .cursor-circle {
   }
 }
 
+/* ── Landing Page ──────────────────────────────────── */
+
+/* Lenis smooth scroll */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* Header nav — hide on mobile */
+@media (max-width: 768px) {
+  .landing-nav-desktop {
+    display: none !important;
+  }
+}
+
+/* How-it-works layout — collapse to single column on mobile */
+@media (max-width: 768px) {
+  .how-it-works-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .how-it-works-grid > div:first-child {
+    position: static !important;
+  }
+}
+
+/* Landing page body scrollbar override (dark background) */
+body:has(main[data-landing="true"]) {
+  background-color: #0D0A1A;
+}
+
 /* ── Auth layout ───────────────────────────────────── */
 .auth-side-left {
   background: #0D0A1A;

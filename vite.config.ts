@@ -19,7 +19,11 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       VitePWA({
+        strategies: "injectManifest",
+        srcDir: "src",
+        filename: "sw.ts",
         registerType: "autoUpdate",
+        injectRegister: "auto",
         includeAssets: ["favicon.ico", "apple-touch-icon.png", "icon-*.png"],
         manifest: {
           name: "Protocolo Encomendas",
@@ -50,18 +54,9 @@ export default defineConfig(({ mode }) => {
             },
           ],
         },
-        workbox: {
+        injectManifest: {
           globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
-          runtimeCaching: [
-            {
-              urlPattern: /^https:\/\/requestwm\.vps-kinghost\.net\/api\/.*/i,
-              handler: "NetworkFirst",
-              options: {
-                cacheName: "api-cache",
-                expiration: { maxEntries: 100, maxAgeSeconds: 60 * 5 },
-              },
-            },
-          ],
+          rollupFormat: "iife",
         },
       }),
     ],
