@@ -109,6 +109,7 @@ export const CouriersScreen = (): React.JSX.Element => {
                 <TableHead>
                   <TableRow>
                     <TableCell>Nome</TableCell>
+                    <TableCell>E-mail</TableCell>
                     <TableCell>Token (PIN)</TableCell>
                     <TableCell align="right">Ações</TableCell>
                   </TableRow>
@@ -117,6 +118,9 @@ export const CouriersScreen = (): React.JSX.Element => {
                   {couriers.map((courier) => (
                     <TableRow key={courier.id} hover>
                       <TableCell>{courier.name}</TableCell>
+                      <TableCell sx={{ maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {courier.email}
+                      </TableCell>
                       <TableCell>
                         <Chip label={courier.token} size="small" variant="outlined" />
                       </TableCell>

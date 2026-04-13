@@ -22,6 +22,7 @@ import {
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 import { api } from "@/services/api";
 import { useAuth } from "@/providers/AuthProvider";
@@ -77,7 +78,7 @@ export const ResidentsScreen = (): React.JSX.Element => {
         }
 
         const res = await api.get<ListByCondominiumResponse>(
-          `/employee/memberships/condominiums/${cid}/members?limit=200&page=1`
+          `/employee/memberships/condominiums/${cid}/members?limit=500&page=1`
         );
         const rows = res.data.data ?? [];
         const mapped: Member[] = rows.map((m) => ({
@@ -91,8 +92,12 @@ export const ResidentsScreen = (): React.JSX.Element => {
         }));
         setMembers(mapped);
         setFiltered(mapped);
-      } catch {
-        setError("Erro ao carregar moradores.");
+      } catch (err) {
+        const msg =
+          axios.isAxiosError(err) && typeof err.response?.data?.message === "string"
+            ? err.response.data.message
+            : "Erro ao carregar moradores.";
+        setError(msg);
       } finally {
         setLoading(false);
       }

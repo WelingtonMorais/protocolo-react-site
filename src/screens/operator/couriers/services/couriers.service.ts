@@ -7,12 +7,20 @@ export const couriersService = {
     return response.data;
   },
 
-  create: async (data: { name: string; token: string }): Promise<Courier> => {
+  create: async (data: {
+    name: string;
+    email: string;
+    phone: string;
+    token?: string;
+  }): Promise<Courier> => {
     const response = await api.post<Courier>("/employee/couriers", data);
     return response.data;
   },
 
-  update: async (id: string, data: { name: string; token: string }): Promise<Courier> => {
+  update: async (
+    id: string,
+    data: { name?: string; email?: string; phone?: string },
+  ): Promise<Courier> => {
     const response = await api.put<Courier>(`/employee/couriers/${id}`, data);
     return response.data;
   },

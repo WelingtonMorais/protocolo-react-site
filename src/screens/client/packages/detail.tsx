@@ -17,7 +17,7 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import { api } from "@/services/api";
 import { QRDisplay } from "@/components/QRDisplay";
-import type { ClientPackage } from "@/types/client.types";
+import { type ClientPackage, parseClientPackagesResponse } from "@/types/client.types";
 
 export const PackageDetailScreen = (): React.JSX.Element => {
   const navigate = useNavigate();
@@ -35,8 +35,9 @@ export const PackageDetailScreen = (): React.JSX.Element => {
     if (!id) return;
     const load = async (): Promise<void> => {
       try {
-        const response = await api.get<ClientPackage[]>("/client/packages");
-        const found = response.data.find((p) => p.id === id);
+        const response = await api.get<ClientPackage[] | { packages: ClientPackage[] }>("/client/packages");
+        const list = parseClientPackagesResponse(response.data);
+        const found = list.find((p) => p.id === id);
         if (found) {
           setPkg(found);
           if (found.pickupToken) setToken(found.pickupToken);

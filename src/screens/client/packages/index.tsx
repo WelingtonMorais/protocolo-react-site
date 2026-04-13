@@ -21,7 +21,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import { useNavigate } from "react-router-dom";
 
 import { api } from "@/services/api";
-import type { ClientPackage } from "@/types/client.types";
+import { type ClientPackage, parseClientPackagesResponse } from "@/types/client.types";
 
 export const PackagesScreen = (): React.JSX.Element => {
   const navigate = useNavigate();
@@ -34,8 +34,8 @@ export const PackagesScreen = (): React.JSX.Element => {
     try {
       setLoading(true);
       setError(null);
-      const response = await api.get<ClientPackage[]>("/client/packages");
-      setPackages(response.data);
+      const response = await api.get<ClientPackage[] | { packages: ClientPackage[] }>("/client/packages");
+      setPackages(parseClientPackagesResponse(response.data));
     } catch {
       setError("Erro ao carregar pacotes.");
     } finally {

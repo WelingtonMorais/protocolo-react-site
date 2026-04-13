@@ -20,6 +20,8 @@ export interface Unit {
 export interface Courier {
   id: string;
   name: string;
+  email: string;
+  phone: string;
   token: string;
   condominiumId: string;
 }

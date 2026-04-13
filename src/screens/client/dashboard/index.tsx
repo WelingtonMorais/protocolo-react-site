@@ -1,5 +1,5 @@
 import React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Box,
   Card,
@@ -19,23 +19,53 @@ import {
   Stepper,
   Step,
   StepLabel,
+  Snackbar,
 } from "@mui/material";
 import Inventory2Icon from "@mui/icons-material/Inventory2";
 import AddHomeIcon from "@mui/icons-material/AddHome";
 import ApartmentIcon from "@mui/icons-material/Apartment";
 import HistoryIcon from "@mui/icons-material/History";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 import { api } from "@/services/api";
 import { useAuth } from "@/providers/AuthProvider";
 import { StaggerContainer, StaggerItem } from "@/components/ui/ScrollReveal";
-import type { Membership } from "@/types/client.types";
+import type { ClientMembership, ClientPendingAccessRequest } from "@/types/client.types";
+import { parseClientPackagesResponse } from "@/types/client.types";
+
+function onlyCpfDigits(raw: string): string {
+  return raw.replace(/\D/g, "").slice(0, 11);
+}
+
+function formatLinkRequestError(err: unknown): string {
+  if (!axios.isAxiosError(err)) return "Erro ao enviar pedido. Tente novamente.";
+  const d = err.response?.data as {
+    message?: string;
+    issues?: { fieldErrors?: Record<string, string[] | undefined> };
+  };
+  if (d?.message === "Validation error" && d.issues?.fieldErrors) {
+    const parts = Object.values(d.issues.fieldErrors)
+      .flat()
+      .filter((x): x is string => typeof x === "string");
+    if (parts.length) return parts.join(" ");
+  }
+  if (typeof d?.message === "string" && d.message !== "Validation error") return d.message;
+  return "Erro ao enviar pedido. Tente novamente.";
+}
+
+function formatClientUnitLine(unit: { number: string; block: string | null | undefined }): string {
+  const b = unit.block?.trim();
+  if (!b || b === "-") return `Bloco ${unit.number}`;
+  return `Unidade ${b} · Ap. ${unit.number}`;
+}
 
 export const ClientDashboard = (): React.JSX.Element => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const [memberships, setMemberships] = useState<Membership[]>([]);
+  const [memberships, setMemberships] = useState<ClientMembership[]>([]);
+  const [pendingAccess, setPendingAccess] = useState<ClientPendingAccessRequest[]>([]);
   const [pendingCount, setPendingCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,27 +78,59 @@ export const ClientDashboard = (): React.JSX.Element => {
   const [cpf, setCpf] = useState("");
   const [linkLoading, setLinkLoading] = useState(false);
   const [linkError, setLinkError] = useState<string | null>(null);
-  const [condoId, setCondoId] = useState("");
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string }>({
+    open: false,
+    message: "",
+  });
 
-  const refetch = async (): Promise<void> => {
+  const openLinkDialog = (): void => {
+    setLinkStep(0);
+    setLinkError(null);
+    setCondoCode("");
+    setUnits([]);
+    setSelectedUnit("");
+    setCpf("");
+    setLinkDialogOpen(true);
+  };
+
+  const cpfDigits = onlyCpfDigits(cpf);
+  const canSubmitLink = selectedUnit.length > 0 && cpfDigits.length === 11;
+
+  const condoRows = useMemo(() => {
+    const memberKeys = new Set(memberships.map((m) => `${m.condominiumId}:${m.unitId}`));
+    const pendingOnly = pendingAccess.filter((p) => !memberKeys.has(`${p.condominiumId}:${p.unitId}`));
+    return [
+      ...pendingOnly.map((data) => ({ kind: "pending" as const, data })),
+      ...memberships.map((data) => ({ kind: "membership" as const, data })),
+    ];
+  }, [memberships, pendingAccess]);
+
+  const refetch = async (opts?: { quiet?: boolean }): Promise<void> => {
     try {
-      setLoading(true);
+      if (!opts?.quiet) {
+        setLoading(true);
+      }
       setError(null);
-      const [membRes, pkgRes] = await Promise.all([
-        api.get<Membership[]>("/client/memberships"),
-        api.get<
-          | { packages: { status: string }[] }
-          | { status: string }[]
-        >("/client/packages"),
+      const pendingPromise = api
+        .get<ClientPendingAccessRequest[]>("/client/access-requests/pending")
+        .then((r) => r.data)
+        .catch(() => [] as ClientPendingAccessRequest[]);
+
+      const [membRes, pkgRes, pendingList] = await Promise.all([
+        api.get<ClientMembership[]>("/client/memberships"),
+        api.get<unknown>("/client/packages"),
+        pendingPromise,
       ]);
       setMemberships(membRes.data);
-      const raw = pkgRes.data;
-      const list = Array.isArray(raw) ? raw : (raw.packages ?? []);
+      setPendingAccess(Array.isArray(pendingList) ? pendingList : []);
+      const list = parseClientPackagesResponse(pkgRes.data);
       setPendingCount(list.filter((p) => p.status === "WAITING_PICKUP").length);
     } catch {
       setError("Erro ao carregar dados.");
     } finally {
-      setLoading(false);
+      if (!opts?.quiet) {
+        setLoading(false);
+      }
     }
   };
 
@@ -84,8 +146,8 @@ export const ClientDashboard = (): React.JSX.Element => {
         "/client/condominiums/resolve-code",
         { code: condoCode }
       );
-      setCondoId(res.data.id);
       setUnits(res.data.units ?? []);
+      setSelectedUnit("");
       setLinkStep(1);
     } catch {
       setLinkError("Código não encontrado. Verifique e tente novamente.");
@@ -96,21 +158,33 @@ export const ClientDashboard = (): React.JSX.Element => {
 
   const handleLinkRequest = async (): Promise<void> => {
     setLinkError(null);
+    const digits = onlyCpfDigits(cpf);
+    if (!selectedUnit || digits.length !== 11) {
+      setLinkError("Selecione a unidade e informe o CPF com 11 dígitos.");
+      return;
+    }
     setLinkLoading(true);
     try {
       await api.post("/client/access-requests", {
-        condominiumId: condoId,
-        unitId: selectedUnit || undefined,
-        cpf: cpf || undefined,
+        joinCode: condoCode.trim(),
+        unitId: selectedUnit,
+        cpf: digits,
       });
       setLinkDialogOpen(false);
       setLinkStep(0);
+      setLinkError(null);
       setCondoCode("");
       setSelectedUnit("");
       setCpf("");
-      await refetch();
-    } catch {
-      setLinkError("Erro ao enviar pedido. Tente novamente.");
+      setUnits([]);
+      await refetch({ quiet: true });
+      setSnackbar({
+        open: true,
+        message:
+          'Pedido enviado com sucesso! Aguarde a aprovação da portaria. Acompanhe o status na seção "Meus Condomínios" abaixo.',
+      });
+    } catch (err) {
+      setLinkError(formatLinkRequestError(err));
     } finally {
       setLinkLoading(false);
     }
@@ -176,7 +250,7 @@ export const ClientDashboard = (): React.JSX.Element => {
               variant="outlined"
               size="small"
               startIcon={<AddHomeIcon />}
-              onClick={() => setLinkDialogOpen(true)}
+              onClick={openLinkDialog}
             >
               Vincular
             </Button>
@@ -184,7 +258,7 @@ export const ClientDashboard = (): React.JSX.Element => {
 
           {loading ? (
             <CircularProgress size={24} />
-          ) : memberships.length === 0 ? (
+          ) : condoRows.length === 0 ? (
             <Box sx={{ textAlign: "center", py: 3 }}>
               <ApartmentIcon sx={{ fontSize: 48, color: "text.disabled", mb: 1 }} />
               <Typography color="text.secondary" mb={2}>
@@ -193,51 +267,62 @@ export const ClientDashboard = (): React.JSX.Element => {
               <Button
                 variant="contained"
                 startIcon={<AddHomeIcon />}
-                onClick={() => setLinkDialogOpen(true)}
+                onClick={openLinkDialog}
               >
                 Vincular ao meu condomínio
               </Button>
             </Box>
           ) : (
             <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
-              {memberships.map((m) => (
-                <Box
-                  key={m.id}
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    p: 1.5,
-                    border: "1px solid",
-                    borderColor: "divider",
-                    borderRadius: 2,
-                  }}
-                >
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                    <ApartmentIcon color="primary" />
-                    <Box>
-                      <Typography variant="body1" fontWeight={500}>{m.condominiumName}</Typography>
-                      {m.unit && (
+              {condoRows.map((row) => {
+                const m = row.data;
+                const isPending = row.kind === "pending";
+                return (
+                  <Box
+                    key={isPending ? `pending-${m.id}` : `mem-${m.id}`}
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      p: 1.5,
+                      border: "1px solid",
+                      borderColor: "divider",
+                      borderRadius: 2,
+                    }}
+                  >
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                      <ApartmentIcon color="primary" />
+                      <Box>
+                        <Typography variant="body1" fontWeight={500}>{m.condominium.name}</Typography>
                         <Typography variant="body2" color="text.secondary">
-                          {m.unit.block ? `Bloco ${m.unit.block} - ` : ""}Ap. {m.unit.number}
+                          {formatClientUnitLine(m.unit)}
                         </Typography>
-                      )}
+                      </Box>
                     </Box>
+                    <Chip
+                      label={isPending ? "Pendente" : "Aprovado"}
+                      color={isPending ? "warning" : "success"}
+                      size="small"
+                    />
                   </Box>
-                  <Chip
-                    label={m.status === "APPROVED" ? "Aprovado" : m.status === "PENDING" ? "Pendente" : "Rejeitado"}
-                    color={m.status === "APPROVED" ? "success" : m.status === "PENDING" ? "warning" : "error"}
-                    size="small"
-                  />
-                </Box>
-              ))}
+                );
+              })}
             </Box>
           )}
         </CardContent>
       </Card>
 
       {/* Link condo dialog */}
-      <Dialog open={linkDialogOpen} onClose={() => setLinkDialogOpen(false)} maxWidth="xs" fullWidth>
+      <Dialog
+        open={linkDialogOpen}
+        onClose={() => {
+          setLinkDialogOpen(false);
+          setLinkStep(0);
+          setLinkError(null);
+        }}
+        maxWidth="xs"
+        fullWidth
+      >
         <DialogTitle>Vincular Condomínio</DialogTitle>
         <DialogContent>
           <Stepper activeStep={linkStep} alternativeLabel sx={{ mb: 3, mt: 1 }}>
@@ -261,32 +346,59 @@ export const ClientDashboard = (): React.JSX.Element => {
 
           {linkStep === 1 && (
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-              <TextField
-                label="Selecione sua unidade"
-                select
-                fullWidth
-                value={selectedUnit}
-                onChange={(e) => setSelectedUnit(e.target.value)}
-              >
-                <MenuItem value="">— Não tenho unidade ainda —</MenuItem>
-                {units.map((u) => (
-                  <MenuItem key={u.id} value={u.id}>
-                    {u.block ? `Bloco ${u.block} - ` : ""}Ap. {u.number}
+              {units.length === 0 ? (
+                <Alert severity="warning">
+                  Este condomínio ainda não possui unidades cadastradas. Peça ao síndico ou portaria para cadastrar
+                  unidades antes de vincular.
+                </Alert>
+              ) : (
+                <TextField
+                  label="Sua unidade"
+                  select
+                  required
+                  fullWidth
+                  value={selectedUnit}
+                  onChange={(e) => setSelectedUnit(e.target.value)}
+                >
+                  <MenuItem value="" disabled>
+                    Selecione a unidade
                   </MenuItem>
-                ))}
-              </TextField>
+                  {units.map((u) => (
+                    <MenuItem key={u.id} value={u.id}>
+                      {u.block && u.block !== "-"
+                        ? `Unidade ${u.block} · Bloco ${u.number}`
+                        : `Bloco ${u.number}`}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              )}
               <TextField
-                label="CPF (opcional)"
+                label="CPF"
+                required
                 fullWidth
                 value={cpf}
-                onChange={(e) => setCpf(e.target.value)}
-                placeholder="000.000.000-00"
+                onChange={(e) => setCpf(onlyCpfDigits(e.target.value))}
+                placeholder="00000000000"
+                helperText="Obrigatório — 11 dígitos (apenas números)."
+                inputProps={{
+                  maxLength: 14,
+                  inputMode: "numeric",
+                  "aria-label": "CPF",
+                }}
               />
             </Box>
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setLinkDialogOpen(false)}>Cancelar</Button>
+          <Button
+            onClick={() => {
+              setLinkDialogOpen(false);
+              setLinkStep(0);
+              setLinkError(null);
+            }}
+          >
+            Cancelar
+          </Button>
           {linkStep === 0 && (
             <Button
               variant="contained"
@@ -300,13 +412,32 @@ export const ClientDashboard = (): React.JSX.Element => {
             <Button
               variant="contained"
               onClick={() => void handleLinkRequest()}
-              disabled={linkLoading}
+              disabled={linkLoading || units.length === 0 || !canSubmitLink}
             >
               {linkLoading ? "Enviando..." : "Enviar Pedido"}
             </Button>
           )}
         </DialogActions>
       </Dialog>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={8000}
+        onClose={(_, reason) => {
+          if (reason === "clickaway") return;
+          setSnackbar((s) => ({ ...s, open: false }));
+        }}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          severity="success"
+          variant="filled"
+          onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
+          sx={{ width: "100%", alignItems: "center" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
