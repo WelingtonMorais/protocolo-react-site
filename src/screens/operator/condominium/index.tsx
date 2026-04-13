@@ -9,8 +9,10 @@ import {
   Button,
   Alert,
   CircularProgress,
-  Chip,
   Divider,
+  InputAdornment,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import ApartmentIcon from "@mui/icons-material/Apartment";
@@ -18,6 +20,54 @@ import ApartmentIcon from "@mui/icons-material/Apartment";
 import { api } from "@/services/api";
 import { QRDisplay } from "@/components/QRDisplay";
 import type { Condominium } from "@/types/operator.types";
+
+/** API Prisma usa `joinCode`; a UI usa `code` para o convite. */
+type CondoApiPayload = {
+  id: string;
+  name: string;
+  joinCode?: string;
+  code?: string;
+  address?: string | null;
+};
+
+function mapCondoFromApi(data: CondoApiPayload | null | undefined): Condominium | null {
+  if (!data?.id) return null;
+  const code = (data.joinCode ?? data.code ?? "").trim();
+  return {
+    id: data.id,
+    name: data.name,
+    code,
+    address: data.address ?? undefined,
+  };
+}
+
+async function copyTextToClipboard(text: string): Promise<boolean> {
+  if (!text) return false;
+  if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      /* tenta fallback */
+    }
+  }
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    ta.style.left = "-9999px";
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return ok;
+  } catch {
+    return false;
+  }
+}
 
 export const CondominiumScreen = (): React.JSX.Element => {
   const [condominium, setCondominium] = useState<Condominium | null>(null);
@@ -33,10 +83,10 @@ export const CondominiumScreen = (): React.JSX.Element => {
   useEffect(() => {
     const load = async (): Promise<void> => {
       try {
-        const response = await api.get<Condominium>("/employee/condominiums");
-        setCondominium(response.data);
+        const response = await api.get<CondoApiPayload | null>("/employee/condominiums/me");
+        setCondominium(mapCondoFromApi(response.data));
       } catch {
-        // No condominium yet
+        setCondominium(null);
       } finally {
         setLoading(false);
       }
@@ -49,8 +99,11 @@ export const CondominiumScreen = (): React.JSX.Element => {
     setError(null);
     setCreating(true);
     try {
-      const response = await api.post<Condominium>("/employee/condominiums", { name, address: address || undefined });
-      setCondominium(response.data);
+      const response = await api.post<CondoApiPayload>("/employee/condominiums", {
+        name,
+        address: address || undefined,
+      });
+      setCondominium(mapCondoFromApi(response.data));
       setSuccess("Condomínio criado com sucesso!");
     } catch {
       setError("Erro ao criar condomínio.");
@@ -60,11 +113,21 @@ export const CondominiumScreen = (): React.JSX.Element => {
   };
 
   const handleCopy = (): void => {
-    if (condominium?.code) {
-      void navigator.clipboard.writeText(condominium.code);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+    const text = condominium?.code;
+    if (!text) {
+      setError("Código de convite indisponível. Atualize a página.");
+      return;
     }
+    void (async () => {
+      const ok = await copyTextToClipboard(text);
+      if (ok) {
+        setCopied(true);
+        setError(null);
+        setTimeout(() => setCopied(false), 2000);
+      } else {
+        setError("Não foi possível copiar automaticamente. Selecione o código no campo acima e use Ctrl+C.");
+      }
+    })();
   };
 
   if (loading) {
@@ -142,28 +205,58 @@ export const CondominiumScreen = (): React.JSX.Element => {
 
             <Typography variant="subtitle2" mb={1}>Código de convite</Typography>
             <Typography variant="body2" color="text.secondary" mb={2}>
-              Compartilhe este código com os moradores para que possam se vincular ao condomínio.
+              Os moradores usam este código no aplicativo para pedir vínculo ao condomínio. Envie por mensagem
+              ou peça para escanear o QR Code abaixo (mesmo código).
             </Typography>
 
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 3 }}>
-              <Chip
-                label={condominium.code}
-                size="medium"
-                sx={{ fontFamily: "monospace", fontSize: 18, fontWeight: 700, letterSpacing: 2 }}
-              />
-              <Button
-                variant="outlined"
-                size="small"
-                startIcon={<ContentCopyIcon />}
-                onClick={handleCopy}
-              >
-                {copied ? "Copiado!" : "Copiar"}
-              </Button>
-            </Box>
+            <TextField
+              fullWidth
+              label="Código para colar ou ler"
+              value={condominium.code}
+              onClick={(e) => (e.target as HTMLInputElement).select?.()}
+              InputProps={{
+                readOnly: true,
+                sx: {
+                  fontFamily: "monospace",
+                  fontSize: "1.1rem",
+                  fontWeight: 700,
+                  letterSpacing: "0.12em",
+                },
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <Tooltip title={copied ? "Copiado!" : "Copiar código"}>
+                      <span>
+                        <IconButton
+                          edge="end"
+                          onClick={handleCopy}
+                          disabled={!condominium.code}
+                          aria-label="Copiar código de convite"
+                          color={copied ? "success" : "default"}
+                        >
+                          <ContentCopyIcon fontSize="small" />
+                        </IconButton>
+                      </span>
+                    </Tooltip>
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ mb: 1 }}
+            />
+            <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 3 }}>
+              Dica: toque no campo para selecionar tudo, ou use o ícone de copiar à direita.
+            </Typography>
 
-            <Typography variant="subtitle2" mb={2}>QR Code para moradores</Typography>
+            <Typography variant="subtitle2" mb={1}>QR Code</Typography>
+            <Typography variant="body2" color="text.secondary" mb={2}>
+              Quadrado em branco com padrão preto: é o QR com o mesmo código, para o morador escanear no celular
+              (se o app oferecer leitura por câmera).
+            </Typography>
             <Box sx={{ display: "flex", justifyContent: "center" }}>
-              <QRDisplay value={condominium.code} size={200} />
+              {condominium.code ? (
+                <QRDisplay value={condominium.code} size={200} />
+              ) : (
+                <Typography color="text.secondary">Código não disponível para gerar QR.</Typography>
+              )}
             </Box>
           </CardContent>
         </Card>

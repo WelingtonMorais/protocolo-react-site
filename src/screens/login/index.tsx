@@ -141,18 +141,35 @@ export const LoginScreen = (): React.JSX.Element => {
                   }}
                 />
                 <Box
-                  component="img"
-                  src={logoApp}
-                  alt="Protocolo Encomendas"
                   sx={{
-                    width: 72,
-                    height: 72,
-                    objectFit: "contain",
-                    filter: "drop-shadow(0 0 20px rgba(96,52,225,0.5))",
                     position: "relative",
                     zIndex: 1,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    py: 1,
+                    px: 1.25,
+                    borderRadius: "9999px",
+                    overflow: "hidden",
+                    bgcolor: "rgba(255,255,255,0.06)",
+                    boxShadow:
+                      "0 6px 24px rgba(0,0,0,0.45), 0 2px 12px rgba(96,52,225,0.25), inset 0 1px 0 rgba(255,255,255,0.08)",
                   }}
-                />
+                >
+                  <Box
+                    component="img"
+                    src={logoApp}
+                    alt="Protocolo Encomendas"
+                    sx={{
+                      width: 72,
+                      height: 72,
+                      objectFit: "contain",
+                      display: "block",
+                      borderRadius: "14px",
+                      filter: "drop-shadow(0 0 16px rgba(96,52,225,0.45))",
+                    }}
+                  />
+                </Box>
               </Box>
             </motion.div>
 
@@ -265,13 +282,35 @@ export const LoginScreen = (): React.JSX.Element => {
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, ease: [0.34, 1.56, 0.64, 1] as [number,number,number,number] }}
+            style={{ marginBottom: 16 }}
           >
             <Box
-              component="img"
-              src={logoApp}
-              alt="Protocolo Encomendas"
-              sx={{ width: 64, height: 64, objectFit: "contain", mb: 2 }}
-            />
+              sx={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                py: 0.75,
+                px: 1,
+                borderRadius: "9999px",
+                overflow: "hidden",
+                bgcolor: "rgba(96,52,225,0.08)",
+                boxShadow:
+                  "0 6px 20px rgba(96,52,225,0.12), 0 2px 8px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.7)",
+              }}
+            >
+              <Box
+                component="img"
+                src={logoApp}
+                alt="Protocolo Encomendas"
+                sx={{
+                  width: 64,
+                  height: 64,
+                  objectFit: "contain",
+                  display: "block",
+                  borderRadius: "12px",
+                }}
+              />
+            </Box>
           </motion.div>
         )}
 

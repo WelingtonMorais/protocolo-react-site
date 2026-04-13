@@ -91,19 +91,38 @@ export const AppSidebar = ({ open, onClose }: AppSidebarProps): React.JSX.Elemen
           display: "flex",
           alignItems: "center",
           gap: 1.5,
+          bgcolor: "transparent",
+          boxShadow: "none",
         }}
       >
         <Box
-          component="img"
-          src={logoApp}
-          alt="Protocolo Encomendas"
           sx={{
-            height: 32,
-            width: "auto",
-            objectFit: "contain",
-            filter: "drop-shadow(0 0 8px rgba(96,52,225,0.5)) brightness(1.1)",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            py: 0.75,
+            px: 1.25,
+            borderRadius: "9999px",
+            overflow: "hidden",
+            bgcolor: "rgba(255,255,255,0.04)",
+            boxShadow:
+              "0 6px 20px rgba(0,0,0,0.35), 0 2px 10px rgba(96,52,225,0.2), inset 0 1px 0 rgba(255,255,255,0.06)",
           }}
-        />
+        >
+          <Box
+            component="img"
+            src={logoApp}
+            alt="Protocolo Encomendas"
+            sx={{
+              height: 32,
+              width: "auto",
+              objectFit: "contain",
+              display: "block",
+              borderRadius: "10px",
+              filter: "drop-shadow(0 0 6px rgba(96,52,225,0.45)) brightness(1.08)",
+            }}
+          />
+        </Box>
         <Typography
           variant="caption"
           sx={{
