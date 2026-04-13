@@ -41,7 +41,7 @@ export const AnimatedPage = ({ children }: AnimatedPageProps): React.JSX.Element
       initial="initial"
       animate="enter"
       exit="exit"
-      style={{ width: "100%", height: "100%" }}
+      style={{ width: "100%" }}
     >
       {children}
     </motion.div>

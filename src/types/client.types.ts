@@ -1,10 +1,21 @@
+/** API pode aninhar o token de retirada como objeto (código em `code`). */
+export interface ClientPickupToken {
+  id: string;
+  packageId: string;
+  code: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  usedAt: string | null;
+}
+
 export interface ClientPackage {
   id: string;
   status: "WAITING_PICKUP" | "DELIVERED";
   recipientName?: string;
   carrier?: string;
   photoUrl?: string;
-  pickupToken?: string;
+  pickupToken?: string | ClientPickupToken;
   createdAt: string;
   deliveredAt?: string;
   unit?: { id: string; number: string; block?: string };
@@ -19,6 +30,28 @@ export function parseClientPackagesResponse(data: unknown): ClientPackage[] {
     return Array.isArray(p) ? (p as ClientPackage[]) : [];
   }
   return [];
+}
+
+/** Extrai o código exibível do token (string direta ou objeto `{ code }` da API). */
+export function normalizePickupTokenCode(
+  raw: string | ClientPickupToken | null | undefined
+): string | null {
+  if (raw == null) return null;
+  if (typeof raw === "string") return raw;
+  if (typeof raw === "object" && typeof raw.code === "string") return raw.code;
+  return null;
+}
+
+/** Resposta de POST /client/packages/:id/pickup-token (formatos variados). */
+export function normalizePickupTokenResponse(data: unknown): string | null {
+  if (data == null) return null;
+  if (typeof data === "string") return data;
+  if (typeof data !== "object") return null;
+  const o = data as Record<string, unknown>;
+  if (typeof o.token === "string") return o.token;
+  if (typeof o.code === "string") return o.code;
+  if (o.pickupToken != null) return normalizePickupTokenCode(o.pickupToken as string | ClientPickupToken);
+  return null;
 }
 
 /** GET /client/memberships — vínculo ativo (sem campo status no banco). */

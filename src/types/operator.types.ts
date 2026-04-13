@@ -50,10 +50,26 @@ export interface Subscription {
   packageLimit: number;
 }
 
-export interface PickupFindResult {
+/**
+ * Resposta de `POST /employee/pickup/find` — mesmo formato que `packageService.findByToken` (Prisma).
+ * O token exibível é `code`; dados da encomenda vêm em `pkg`.
+ */
+export interface EmployeePickupFindResponse {
   id: string;
   packageId: string;
-  token: string;
-  recipientName: string;
-  unitNumber: string;
+  code: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  usedAt: string | null;
+  pkg: {
+    id: string;
+    description: string;
+    photoUrl?: string | null;
+    status: "WAITING_PICKUP" | "DELIVERED";
+    createdAt: string;
+    condominium: { id: string; name: string };
+    unit: { id: string; number: string; block?: string | null };
+    receiver?: { id: string; name: string; email?: string } | null;
+  };
 }

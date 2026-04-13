@@ -13,15 +13,29 @@ export const MainContent = ({ drawerOpen }: MainContentProps): React.JSX.Element
   return (
     <Box
       component="main"
-      sx={{
-        flexGrow: 1,
-        p: { xs: 2, md: 3 },
-        mt: "64px",
+      sx={(theme) => ({
+        flex: 1,
+        minWidth: 0,
+        minHeight: 0,
+        overflowY: "auto",
+        overflowX: "hidden",
+        WebkitOverflowScrolling: "touch",
         ml: { md: drawerOpen ? `${DRAWER_WIDTH}px` : 0 },
         transition: "margin 0.25s cubic-bezier(0.4,0,0.2,1)",
-        minHeight: "calc(100vh - 64px)",
         bgcolor: "background.default",
-      }}
+        boxSizing: "border-box",
+        px: 2,
+        pb: 2,
+        pt: `calc(60px + ${theme.spacing(2)})`,
+        [theme.breakpoints.up("sm")]: {
+          pt: `calc(64px + ${theme.spacing(2)})`,
+        },
+        [theme.breakpoints.up("md")]: {
+          px: 3,
+          pb: 3,
+          pt: `calc(64px + ${theme.spacing(3)})`,
+        },
+      })}
     >
       <AnimatedPage>
         <Outlet />

@@ -12,7 +12,15 @@ export const DashboardLayout = (): React.JSX.Element => {
   const location = useLocation();
 
   return (
-    <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "background.default" }}>
+    <Box
+      sx={{
+        display: "flex",
+        height: "100dvh",
+        maxHeight: "100dvh",
+        overflow: "hidden",
+        bgcolor: "background.default",
+      }}
+    >
       <AppHeader drawerOpen={open} />
       <AppSidebar open={open} onClose={closeMenu} />
       <AnimatePresence mode="wait" initial={false}>

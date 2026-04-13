@@ -1,5 +1,4 @@
-import React from "react";
-import { lazy, Suspense } from "react";
+import React, { lazy, Suspense, useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { CircularProgress, Box } from "@mui/material";
 
@@ -7,6 +6,7 @@ import { RootLayout } from "./app/RootLayout";
 import { DashboardLayout } from "./app/DashboardLayout";
 import { PrivateRoute } from "./components/PrivateRoute";
 import { RoleRoute } from "./components/RoleRoute";
+import { SplashScreen } from "./components/SplashScreen";
 
 // Auth screens
 const LoginScreen = lazy(() =>
@@ -84,50 +84,67 @@ const Loader = (): React.JSX.Element => (
   </Box>
 );
 
+const SPLASH_KEY = "protocolo_splash_shown";
+
 const App = (): React.JSX.Element => {
+  const [splashVisible, setSplashVisible] = useState<boolean>(
+    () => !sessionStorage.getItem(SPLASH_KEY)
+  );
+
   return (
-    <Suspense fallback={<Loader />}>
-      <Routes>
-        <Route element={<RootLayout />}>
-          {/* Public routes */}
-          <Route path="/" element={<LoginScreen />} />
-          <Route path="/cadastro" element={<RegisterScreen />} />
-          <Route path="/recuperar-senha" element={<ForgotPasswordScreen />} />
+    <>
+      {splashVisible && (
+        <SplashScreen
+          onComplete={() => {
+            sessionStorage.setItem(SPLASH_KEY, "1");
+            setSplashVisible(false);
+          }}
+        />
+      )}
 
-          {/* Protected routes */}
-          <Route element={<PrivateRoute />}>
-            <Route element={<DashboardLayout />}>
-              {/* Operator routes — EMPLOYEE / ADMIN only */}
-              <Route element={<RoleRoute allowedRoles={["EMPLOYEE", "ADMIN"]} />}>
-                <Route path="/operador/dashboard" element={<OperatorDashboard />} />
-                <Route path="/operador/registrar" element={<RegisterPackageScreen />} />
-                <Route path="/operador/entregar" element={<FindPackageScreen />} />
-                <Route path="/operador/pedidos" element={<AccessRequestsScreen />} />
-                <Route path="/operador/mensageiros" element={<CouriersScreen />} />
-                <Route path="/operador/mensageiros/create" element={<CreateCourierScreen />} />
-                <Route path="/operador/mensageiros/edit" element={<EditCourierScreen />} />
-                <Route path="/operador/unidades" element={<UnitsScreen />} />
-                <Route path="/operador/condominio" element={<CondominiumScreen />} />
-                <Route path="/operador/moradores" element={<ResidentsScreen />} />
-                <Route path="/operador/plano" element={<SubscriptionScreen />} />
-              </Route>
+      <Suspense fallback={<Loader />}>
+        <Routes>
+          <Route element={<RootLayout />}>
+            {/* Public routes */}
+            <Route path="/" element={<LoginScreen />} />
+            <Route path="/cadastro" element={<RegisterScreen />} />
+            <Route path="/recuperar-senha" element={<ForgotPasswordScreen />} />
 
-              {/* Client routes — CLIENT only */}
-              <Route element={<RoleRoute allowedRoles={["CLIENT"]} />}>
-                <Route path="/morador/dashboard" element={<ClientDashboard />} />
-                <Route path="/morador/pacotes" element={<PackagesScreen />} />
-                <Route path="/morador/historico" element={<PackagesScreen />} />
-                <Route path="/morador/pacotes/:id" element={<PackageDetailScreen />} />
-                <Route path="/morador/configuracoes" element={<ClientSettingsScreen />} />
+            {/* Protected routes */}
+            <Route element={<PrivateRoute />}>
+              <Route element={<DashboardLayout />}>
+                {/* Operator routes — EMPLOYEE / ADMIN only */}
+                <Route element={<RoleRoute allowedRoles={["EMPLOYEE", "ADMIN"]} />}>
+                  <Route path="/operador/dashboard" element={<OperatorDashboard />} />
+                  <Route path="/operador/registrar" element={<RegisterPackageScreen />} />
+                  <Route path="/operador/entregar" element={<FindPackageScreen />} />
+                  <Route path="/operador/pedidos" element={<AccessRequestsScreen />} />
+                  <Route path="/operador/mensageiros" element={<CouriersScreen />} />
+                  <Route path="/operador/mensageiros/create" element={<CreateCourierScreen />} />
+                  <Route path="/operador/mensageiros/edit" element={<EditCourierScreen />} />
+                  <Route path="/operador/unidades" element={<UnitsScreen />} />
+                  <Route path="/operador/condominio" element={<CondominiumScreen />} />
+                  <Route path="/operador/moradores" element={<ResidentsScreen />} />
+                  <Route path="/operador/plano" element={<SubscriptionScreen />} />
+                </Route>
+
+                {/* Client routes — CLIENT only */}
+                <Route element={<RoleRoute allowedRoles={["CLIENT"]} />}>
+                  <Route path="/morador/dashboard" element={<ClientDashboard />} />
+                  <Route path="/morador/pacotes" element={<PackagesScreen />} />
+                  <Route path="/morador/historico" element={<PackagesScreen />} />
+                  <Route path="/morador/pacotes/:id" element={<PackageDetailScreen />} />
+                  <Route path="/morador/configuracoes" element={<ClientSettingsScreen />} />
+                </Route>
               </Route>
             </Route>
-          </Route>
 
-          {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Route>
-      </Routes>
-    </Suspense>
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Route>
+        </Routes>
+      </Suspense>
+    </>
   );
 };
 

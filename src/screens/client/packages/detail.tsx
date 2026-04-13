@@ -17,7 +17,12 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import { api } from "@/services/api";
 import { QRDisplay } from "@/components/QRDisplay";
-import { type ClientPackage, parseClientPackagesResponse } from "@/types/client.types";
+import {
+  type ClientPackage,
+  normalizePickupTokenCode,
+  normalizePickupTokenResponse,
+  parseClientPackagesResponse,
+} from "@/types/client.types";
 
 export const PackageDetailScreen = (): React.JSX.Element => {
   const navigate = useNavigate();
@@ -40,7 +45,8 @@ export const PackageDetailScreen = (): React.JSX.Element => {
         const found = list.find((p) => p.id === id);
         if (found) {
           setPkg(found);
-          if (found.pickupToken) setToken(found.pickupToken);
+          const code = normalizePickupTokenCode(found.pickupToken);
+          if (code) setToken(code);
         }
       } catch {
         setError("Erro ao carregar pacote.");
@@ -55,8 +61,10 @@ export const PackageDetailScreen = (): React.JSX.Element => {
     if (!id) return;
     setTokenLoading(true);
     try {
-      const response = await api.post<{ token: string }>(`/client/packages/${id}/pickup-token`);
-      setToken(response.data.token);
+      const response = await api.post<unknown>(`/client/packages/${id}/pickup-token`);
+      const code = normalizePickupTokenResponse(response.data);
+      if (code) setToken(code);
+      else setError("Resposta inválida ao gerar token.");
     } catch {
       setError("Erro ao gerar token.");
     } finally {
