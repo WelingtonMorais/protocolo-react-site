@@ -2,6 +2,14 @@ import axios from "axios";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_URL ?? "https://requestwm.vps-kinghost.net/api";
+export const API_ORIGIN = API_BASE_URL.replace(/\/api\/?$/, "");
+
+export function resolveApiAssetUrl(url?: string | null): string | undefined {
+  if (!url) return undefined;
+  if (/^https?:\/\//i.test(url)) return url;
+  if (url.startsWith("/")) return `${API_ORIGIN}${url}`;
+  return `${API_ORIGIN}/${url}`;
+}
 
 export const api = axios.create({
   baseURL: API_BASE_URL,

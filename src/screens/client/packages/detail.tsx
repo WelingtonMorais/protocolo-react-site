@@ -15,7 +15,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
 import { useNavigate, useParams } from "react-router-dom";
 
-import { api } from "@/services/api";
+import { api, resolveApiAssetUrl } from "@/services/api";
 import { QRDisplay } from "@/components/QRDisplay";
 import {
   type ClientPackage,
@@ -118,10 +118,10 @@ export const PackageDetailScreen = (): React.JSX.Element => {
       {error && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>{error}</Alert>}
       {alertSent && <Alert severity="success" sx={{ mb: 2 }}>Alerta enviado para a portaria!</Alert>}
 
-      {pkg.photoUrl && (
+      {resolveApiAssetUrl(pkg.photoUrl) && (
         <Box
           component="img"
-          src={pkg.photoUrl}
+          src={resolveApiAssetUrl(pkg.photoUrl)}
           alt="Foto do pacote"
           sx={{ width: "100%", borderRadius: 2, mb: 2, maxHeight: 240, objectFit: "cover" }}
         />

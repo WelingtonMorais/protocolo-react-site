@@ -16,7 +16,7 @@ import QrCodeScannerIcon from "@mui/icons-material/QrCodeScanner";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import axios from "axios";
 
-import { api } from "@/services/api";
+import { api, resolveApiAssetUrl } from "@/services/api";
 import { QRScanner } from "@/components/QRScanner";
 import type { EmployeePickupFindResponse } from "@/types/operator.types";
 
@@ -42,6 +42,22 @@ function apiErrorMessage(err: unknown, fallback: string): string {
     }
   }
   return fallback;
+}
+
+function getPackagePhotoUrl(pkg: EmployeePickupFindResponse["pkg"]): string | undefined {
+  const candidates = [
+    pkg.photoUrl,
+    (pkg as unknown as Record<string, unknown>).photo_url,
+    (pkg as unknown as Record<string, unknown>).imageUrl,
+  ];
+
+  for (const candidate of candidates) {
+    if (typeof candidate === "string" && candidate.trim().length > 0) {
+      return resolveApiAssetUrl(candidate);
+    }
+  }
+
+  return undefined;
 }
 
 export const FindPackageScreen = (): React.JSX.Element => {
@@ -123,6 +139,7 @@ export const FindPackageScreen = (): React.JSX.Element => {
   }
 
   const pkg = result?.pkg;
+  const packagePhotoUrl = pkg ? getPackagePhotoUrl(pkg) : undefined;
 
   return (
     <Box sx={{ maxWidth: 520, mx: "auto" }}>
@@ -174,10 +191,10 @@ export const FindPackageScreen = (): React.JSX.Element => {
         <Card>
           <CardContent>
             <Typography variant="h6" mb={2}>Pacote encontrado</Typography>
-            {pkg.photoUrl && (
+            {packagePhotoUrl && (
               <Box
                 component="img"
-                src={pkg.photoUrl}
+                src={packagePhotoUrl}
                 alt="Foto do pacote"
                 sx={{ width: "100%", borderRadius: 2, mb: 2, maxHeight: 200, objectFit: "cover" }}
               />

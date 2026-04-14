@@ -20,7 +20,7 @@ import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import { useNavigate } from "react-router-dom";
 
-import { api } from "@/services/api";
+import { api, resolveApiAssetUrl } from "@/services/api";
 import { type ClientPackage, parseClientPackagesResponse } from "@/types/client.types";
 
 export const PackagesScreen = (): React.JSX.Element => {
@@ -125,10 +125,10 @@ export const PackagesScreen = (): React.JSX.Element => {
                     )}
                   </Box>
 
-                  {pkg.photoUrl && (
+                  {resolveApiAssetUrl(pkg.photoUrl) && (
                     <Box
                       component="img"
-                      src={pkg.photoUrl}
+                      src={resolveApiAssetUrl(pkg.photoUrl)}
                       alt="Foto do pacote"
                       sx={{
                         width: "100%",
