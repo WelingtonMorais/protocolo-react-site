@@ -50,6 +50,21 @@ export interface Subscription {
   packageLimit: number;
 }
 
+export interface PlanOffer {
+  type: "ESSENTIAL" | "PROFESSIONAL" | "ELITE" | string;
+  name: string;
+  price: number;
+  monthlyLimit: number | null;
+  features: string[];
+}
+
+export interface PendingPayment {
+  id: string;
+  status: "PENDING" | "APPROVED" | "REJECTED" | string;
+  planType: string;
+  createdAt: string;
+}
+
 /**
  * Resposta de `POST /employee/pickup/find` — mesmo formato que `packageService.findByToken` (Prisma).
  * O token exibível é `code`; dados da encomenda vêm em `pkg`.

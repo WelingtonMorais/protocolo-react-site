@@ -68,6 +68,11 @@ const SubscriptionScreen = lazy(() =>
     default: m.SubscriptionScreen,
   }))
 );
+const PlanCatalogScreen = lazy(() =>
+  import("./screens/operator/plan-catalog/index").then((m) => ({
+    default: m.PlanCatalogScreen,
+  }))
+);
 
 // Client screens
 const ClientDashboard = lazy(() =>
@@ -136,6 +141,7 @@ const App = (): React.JSX.Element => {
                   <Route path="/operador/condominio" element={<CondominiumScreen />} />
                   <Route path="/operador/moradores" element={<ResidentsScreen />} />
                   <Route path="/operador/plano" element={<SubscriptionScreen />} />
+                  <Route path="/operador/planos" element={<PlanCatalogScreen />} />
                   <Route path="/operador/configuracoes" element={<ClientSettingsScreen />} />
                 </Route>
 

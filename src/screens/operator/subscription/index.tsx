@@ -22,6 +22,7 @@ import type { Subscription } from "@/types/operator.types";
 export const SubscriptionScreen = (): React.JSX.Element => {
   const navigate = useNavigate();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [pendingPayment, setPendingPayment] = useState<{ status?: string; planType?: string } | null>(null);
   const [noCondo, setNoCondo] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -31,12 +32,14 @@ export const SubscriptionScreen = (): React.JSX.Element => {
       try {
         setNoCondo(false);
         const response = await api.get<Subscription | null>("/employee/subscriptions/current");
+        const pendingRes = await api.get<{ status?: string; planType?: string } | null>("/employee/payments/pending");
         if (response.data === null || response.data === undefined) {
           setSubscription(null);
           setNoCondo(true);
         } else {
           setSubscription(response.data);
         }
+        setPendingPayment(pendingRes.data ?? null);
       } catch {
         setError("Erro ao carregar dados do plano.");
       } finally {
@@ -84,6 +87,35 @@ export const SubscriptionScreen = (): React.JSX.Element => {
 
       {subscription && (
         <Grid container spacing={2}>
+          {subscription.status === "EXPIRED" && (
+            <Grid item xs={12}>
+              <Alert severity="error">
+                Sua assinatura venceu e os registros ficam bloqueados. Assine agora para voltar a operar sem parar a portaria.
+              </Alert>
+            </Grid>
+          )}
+          {subscription.status === "INACTIVE" && (
+            <Grid item xs={12}>
+              <Alert severity="warning">
+                Sua assinatura esta inativa. Ative um plano agora para liberar registros e retiradas normalmente.
+              </Alert>
+            </Grid>
+          )}
+          {subscription.status === "ACTIVE" && usagePercent >= 90 && (
+            <Grid item xs={12}>
+              <Alert severity="warning">
+                Seu limite mensal esta no fim. Garanta continuidade com upgrade antes de travar o registro de encomendas.
+              </Alert>
+            </Grid>
+          )}
+          {pendingPayment?.status === "PENDING" && (
+            <Grid item xs={12}>
+              <Alert severity="info">
+                Pagamento do plano {pendingPayment.planType ?? ""} ainda pendente. Quando aprovar, seu acesso atualiza automaticamente.
+              </Alert>
+            </Grid>
+          )}
+
           <Grid item xs={12}>
             <Card>
               <CardContent>
@@ -138,13 +170,25 @@ export const SubscriptionScreen = (): React.JSX.Element => {
                 <CardContent sx={{ textAlign: "center" }}>
                   <Typography variant="h6" mb={1}>Renovar Assinatura</Typography>
                   <Typography variant="body2" color="text.secondary" mb={2}>
-                    Renove seu plano para continuar usando o sistema.
+                    Esta na hora de assinar um plano para manter seu condominio rodando sem interrupcao.
                   </Typography>
-                  <Button variant="contained" size="large" fullWidth>
+                  <Button
+                    variant="contained"
+                    size="large"
+                    fullWidth
+                    onClick={() => navigate("/operador/planos")}
+                  >
                     Ver Planos Disponíveis
                   </Button>
                 </CardContent>
               </Card>
+            </Grid>
+          )}
+          {subscription.status === "ACTIVE" && (
+            <Grid item xs={12}>
+              <Button variant="outlined" fullWidth onClick={() => navigate("/operador/planos")}>
+                Ver planos disponiveis para upgrade
+              </Button>
             </Grid>
           )}
         </Grid>
