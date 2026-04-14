@@ -29,6 +29,7 @@ import axios from "axios";
 import { api } from "@/services/api";
 import { useAuth } from "@/providers/AuthProvider";
 import type { Unit } from "@/types/operator.types";
+import { optimizeImageForUpload } from "@/utils/image-optimizer";
 
 interface MembershipSearchRow {
   id: string;
@@ -238,11 +239,28 @@ export const RegisterPackageScreen = (): React.JSX.Element => {
     return true;
   }, [unitId, finalDescription.length, unitMembers.length, receiverId]);
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+  useEffect(() => {
+    return () => {
+      if (photoPreview) URL.revokeObjectURL(photoPreview);
+    };
+  }, [photoPreview]);
+
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
     const file = e.target.files?.[0];
-    if (file) {
+    if (!file) return;
+    try {
+      const optimizedResult = await optimizeImageForUpload(file);
+      const optimized = optimizedResult.file;
+      const nextPreview = URL.createObjectURL(optimized);
+      if (photoPreview) URL.revokeObjectURL(photoPreview);
+      setPhoto(optimized);
+      setPhotoPreview(nextPreview);
+    } catch {
+      // Fallback to original file if optimization fails for any reason.
+      const nextPreview = URL.createObjectURL(file);
+      if (photoPreview) URL.revokeObjectURL(photoPreview);
       setPhoto(file);
-      setPhotoPreview(URL.createObjectURL(file));
+      setPhotoPreview(nextPreview);
     }
   };
 
@@ -277,6 +295,7 @@ export const RegisterPackageScreen = (): React.JSX.Element => {
     setCarrier("");
     setTrackingCode("");
     setPhoto(null);
+    if (photoPreview) URL.revokeObjectURL(photoPreview);
     setPhotoPreview(null);
     setError(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -533,7 +552,9 @@ export const RegisterPackageScreen = (): React.JSX.Element => {
               accept="image/*"
               capture="environment"
               style={{ display: "none" }}
-              onChange={handlePhotoChange}
+              onChange={(e) => {
+                void handlePhotoChange(e);
+              }}
             />
 
             {photoPreview ? (
@@ -542,6 +563,8 @@ export const RegisterPackageScreen = (): React.JSX.Element => {
                   component="img"
                   src={photoPreview}
                   alt="Foto do pacote"
+                  loading="lazy"
+                  decoding="async"
                   sx={{ width: "100%", maxHeight: 200, objectFit: "cover", borderRadius: 2 }}
                 />
                 <Button

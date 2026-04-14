@@ -123,6 +123,8 @@ export const PackageDetailScreen = (): React.JSX.Element => {
           component="img"
           src={resolveApiAssetUrl(pkg.photoUrl)}
           alt="Foto do pacote"
+          loading="lazy"
+          decoding="async"
           sx={{ width: "100%", borderRadius: 2, mb: 2, maxHeight: 240, objectFit: "cover" }}
         />
       )}

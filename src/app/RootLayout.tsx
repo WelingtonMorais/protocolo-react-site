@@ -6,6 +6,7 @@ import { AnimatePresence } from "framer-motion";
 import theme from "@/config/muiTheme";
 import { AuthProvider } from "@/providers/AuthProvider";
 import { MenuProvider } from "@/providers/useMenu";
+import { NotificationUIProvider } from "@/providers/NotificationUIProvider";
 import { CustomCursor } from "@/components/ui/CustomCursor";
 import "@/assets/styles/global.css";
 
@@ -18,9 +19,11 @@ export const RootLayout = (): React.JSX.Element => {
       <CustomCursor />
       <AuthProvider>
         <MenuProvider>
-          <AnimatePresence mode="wait" initial={false}>
-            <Outlet key={location.pathname} />
-          </AnimatePresence>
+          <NotificationUIProvider>
+            <AnimatePresence mode="wait" initial={false}>
+              <Outlet key={location.pathname} />
+            </AnimatePresence>
+          </NotificationUIProvider>
         </MenuProvider>
       </AuthProvider>
     </ThemeProvider>

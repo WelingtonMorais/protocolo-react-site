@@ -82,6 +82,9 @@ const PackageDetailScreen = lazy(() =>
 const ClientSettingsScreen = lazy(() =>
   import("./screens/client/settings/index").then((m) => ({ default: m.ClientSettingsScreen }))
 );
+const NotificationsScreen = lazy(() =>
+  import("./screens/notifications/index").then((m) => ({ default: m.NotificationsScreen }))
+);
 
 const Loader = (): React.JSX.Element => (
   <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
@@ -119,6 +122,7 @@ const App = (): React.JSX.Element => {
             {/* Protected routes */}
             <Route element={<PrivateRoute />}>
               <Route element={<DashboardLayout />}>
+                <Route path="/notificacoes" element={<NotificationsScreen />} />
                 {/* Operator routes — EMPLOYEE / ADMIN only */}
                 <Route element={<RoleRoute allowedRoles={["EMPLOYEE", "ADMIN"]} />}>
                   <Route path="/operador/dashboard" element={<OperatorDashboard />} />
@@ -132,6 +136,7 @@ const App = (): React.JSX.Element => {
                   <Route path="/operador/condominio" element={<CondominiumScreen />} />
                   <Route path="/operador/moradores" element={<ResidentsScreen />} />
                   <Route path="/operador/plano" element={<SubscriptionScreen />} />
+                  <Route path="/operador/configuracoes" element={<ClientSettingsScreen />} />
                 </Route>
 
                 {/* Client routes — CLIENT only */}

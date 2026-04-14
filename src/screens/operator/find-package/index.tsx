@@ -196,6 +196,8 @@ export const FindPackageScreen = (): React.JSX.Element => {
                 component="img"
                 src={packagePhotoUrl}
                 alt="Foto do pacote"
+                loading="lazy"
+                decoding="async"
                 sx={{ width: "100%", borderRadius: 2, mb: 2, maxHeight: 200, objectFit: "cover" }}
               />
             )}

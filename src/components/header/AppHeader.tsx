@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   AppBar,
   Toolbar,
@@ -7,19 +7,16 @@ import {
   Avatar,
   Tooltip,
   Badge,
-  Snackbar,
-  Alert,
-  CircularProgress,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import LogoutIcon from "@mui/icons-material/Logout";
 import NotificationsIcon from "@mui/icons-material/Notifications";
-import NotificationsOffIcon from "@mui/icons-material/NotificationsOff";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 
 import { useMenu } from "@/providers/useMenu";
 import { useAuth } from "@/providers/AuthProvider";
-import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { useNotificationUI } from "@/providers/NotificationUIProvider";
 import logoApp from "../../../assets/logo_app.png";
 
 const DRAWER_WIDTH = 240;
@@ -29,14 +26,10 @@ interface AppHeaderProps {
 }
 
 export const AppHeader = ({ drawerOpen }: AppHeaderProps): React.JSX.Element => {
+  const navigate = useNavigate();
   const { toggleMenu } = useMenu();
   const { user, logout } = useAuth();
-  const { permission, isSubscribed, isLoading, subscribe, unsubscribe } = usePushNotifications();
-  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: "success" | "error" | "info" }>({
-    open: false,
-    message: "",
-    severity: "success",
-  });
+  const { hasUnread } = useNotificationUI();
 
   const initials = user?.name
     ? user.name
@@ -47,36 +40,7 @@ export const AppHeader = ({ drawerOpen }: AppHeaderProps): React.JSX.Element => 
         .toUpperCase()
     : "U";
 
-  const handleNotificationClick = async (): Promise<void> => {
-    try {
-      if (isSubscribed) {
-        await unsubscribe();
-        setSnackbar({ open: true, message: "Notificações desativadas.", severity: "info" });
-      } else {
-        await subscribe();
-        setSnackbar({ open: true, message: "Notificações ativadas com sucesso!", severity: "success" });
-      }
-    } catch {
-      if (permission === "denied") {
-        setSnackbar({
-          open: true,
-          message: "Permissão bloqueada. Habilite notificações nas configurações do navegador.",
-          severity: "error",
-        });
-      } else {
-        setSnackbar({ open: true, message: "Erro ao configurar notificações.", severity: "error" });
-      }
-    }
-  };
-
-  const notifTooltip =
-    permission === "unsupported"
-      ? "Notificações não suportadas neste navegador"
-      : permission === "denied"
-      ? "Notificações bloqueadas — habilite nas configurações do navegador"
-      : isSubscribed
-      ? "Notificações ativadas (clique para desativar)"
-      : "Ativar notificações";
+  const notifTooltip = "Ver notificacoes";
 
   return (
     <AppBar
@@ -136,38 +100,24 @@ export const AppHeader = ({ drawerOpen }: AppHeaderProps): React.JSX.Element => 
 
         {/* Actions */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-          {/* Notification toggle */}
-          {permission !== "unsupported" && (
-            <Tooltip title={notifTooltip}>
-              <span>
-                <IconButton
-                  onClick={() => void handleNotificationClick()}
-                  disabled={isLoading || permission === "denied"}
-                  sx={{
-                    color: isSubscribed ? "primary.main" : "text.secondary",
-                    "&:hover": { color: "primary.main", bgcolor: "rgba(96,52,225,0.08)" },
-                  }}
-                >
-                  {isLoading ? (
-                    <CircularProgress size={20} color="inherit" />
-                  ) : (
-                    <Badge
-                      variant="dot"
-                      color="success"
-                      invisible={!isSubscribed}
-                      sx={{ "& .MuiBadge-dot": { width: 8, height: 8, borderRadius: "50%" } }}
-                    >
-                      {isSubscribed ? (
-                        <NotificationsIcon fontSize="small" />
-                      ) : (
-                        <NotificationsOffIcon fontSize="small" />
-                      )}
-                    </Badge>
-                  )}
-                </IconButton>
-              </span>
-            </Tooltip>
-          )}
+          <Tooltip title={notifTooltip}>
+            <IconButton
+              onClick={() => navigate("/notificacoes")}
+              sx={{
+                color: hasUnread ? "primary.main" : "text.secondary",
+                "&:hover": { color: "primary.main", bgcolor: "rgba(96,52,225,0.08)" },
+              }}
+            >
+              <Badge
+                variant="dot"
+                color="success"
+                invisible={!hasUnread}
+                sx={{ "& .MuiBadge-dot": { width: 8, height: 8, borderRadius: "50%" } }}
+              >
+                <NotificationsIcon fontSize="small" />
+              </Badge>
+            </IconButton>
+          </Tooltip>
 
           {/* Avatar */}
           <Tooltip title={user?.name ?? "Usuário"}>
@@ -205,21 +155,6 @@ export const AppHeader = ({ drawerOpen }: AppHeaderProps): React.JSX.Element => 
         </Box>
       </Toolbar>
 
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert
-          onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
-          severity={snackbar.severity}
-          variant="filled"
-          sx={{ width: "100%" }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </AppBar>
   );
 };

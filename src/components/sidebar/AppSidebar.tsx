@@ -24,6 +24,7 @@ import CreditCardIcon from "@mui/icons-material/CreditCard";
 import Inventory2Icon from "@mui/icons-material/Inventory2";
 import HistoryIcon from "@mui/icons-material/History";
 import SettingsIcon from "@mui/icons-material/Settings";
+import NotificationsIcon from "@mui/icons-material/Notifications";
 import { NavLink, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 
@@ -42,12 +43,15 @@ const operatorMenuItems = [
   { label: "Condomínio", icon: <ApartmentIcon />, path: "/operador/condominio" },
   { label: "Moradores", icon: <PersonIcon />, path: "/operador/moradores" },
   { label: "Plano", icon: <CreditCardIcon />, path: "/operador/plano" },
+  { label: "Notificacoes", icon: <NotificationsIcon />, path: "/notificacoes" },
+  { label: "Configuracoes", icon: <SettingsIcon />, path: "/operador/configuracoes" },
 ];
 
 const clientMenuItems = [
   { label: "Início", icon: <DashboardIcon />, path: "/morador/dashboard" },
   { label: "Meus Pacotes", icon: <Inventory2Icon />, path: "/morador/pacotes" },
   { label: "Histórico", icon: <HistoryIcon />, path: "/morador/historico" },
+  { label: "Notificacoes", icon: <NotificationsIcon />, path: "/notificacoes" },
   { label: "Configurações", icon: <SettingsIcon />, path: "/morador/configuracoes" },
 ];
 
