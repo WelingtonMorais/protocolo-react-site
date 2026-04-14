@@ -30,8 +30,8 @@ function normalizePickupInput(raw: string): string {
 
 function formatUnitLine(unit: { number: string; block?: string | null }): string {
   const b = unit.block?.trim();
-  if (!b || b === "-") return `Ap. ${unit.number}`;
-  return `Bloco ${b} · Ap. ${unit.number}`;
+  if (!b || b === "-") return `Unidade ${unit.number}`;
+  return `Bloco ${b} · Unidade ${unit.number}`;
 }
 
 function apiErrorMessage(err: unknown, fallback: string): string {

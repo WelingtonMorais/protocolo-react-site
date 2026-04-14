@@ -56,8 +56,8 @@ function formatLinkRequestError(err: unknown): string {
 
 function formatClientUnitLine(unit: { number: string; block: string | null | undefined }): string {
   const b = unit.block?.trim();
-  if (!b || b === "-") return `Bloco ${unit.number}`;
-  return `Unidade ${b} · Ap. ${unit.number}`;
+  if (!b || b === "-") return `Unidade ${unit.number}`;
+  return `Bloco ${b} · Unidade ${unit.number}`;
 }
 
 export const ClientDashboard = (): React.JSX.Element => {
@@ -366,8 +366,8 @@ export const ClientDashboard = (): React.JSX.Element => {
                   {units.map((u) => (
                     <MenuItem key={u.id} value={u.id}>
                       {u.block && u.block !== "-"
-                        ? `Unidade ${u.block} · Bloco ${u.number}`
-                        : `Bloco ${u.number}`}
+                        ? `Bloco ${u.block} · Unidade ${u.number}`
+                        : `Unidade ${u.number}`}
                     </MenuItem>
                   ))}
                 </TextField>

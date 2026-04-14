@@ -147,7 +147,7 @@ export const PackagesScreen = (): React.JSX.Element => {
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     {pkg.unit?.block ? `Bloco ${pkg.unit.block} - ` : ""}
-                    {pkg.unit?.number ? `Ap. ${pkg.unit.number}` : ""}
+                    {pkg.unit?.number ? `Unidade ${pkg.unit.number}` : ""}
                   </Typography>
                   {pkg.carrier && (
                     <Typography variant="caption" color="text.secondary" display="block">

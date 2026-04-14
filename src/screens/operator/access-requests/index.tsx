@@ -123,7 +123,7 @@ export const AccessRequestsScreen = (): React.JSX.Element => {
                       <TableCell>{req.user.email}</TableCell>
                       <TableCell>
                         {req.unit
-                          ? `${req.unit.block ? req.unit.block + " / " : ""}${req.unit.number}`
+                          ? `${req.unit.block ? `Bloco ${req.unit.block} · ` : ""}Unidade ${req.unit.number}`
                           : "—"}
                       </TableCell>
                       <TableCell>

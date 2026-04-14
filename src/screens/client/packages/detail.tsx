@@ -112,7 +112,9 @@ export const PackageDetailScreen = (): React.JSX.Element => {
       <Typography variant="h5" mb={0.5}>Detalhes do Pacote</Typography>
       <Typography variant="body2" color="text.secondary" mb={3}>
         {pkg.condominium?.name ?? "Condomínio"}
-        {pkg.unit ? ` — Ap. ${pkg.unit.number}` : ""}
+        {pkg.unit
+          ? ` — ${pkg.unit.block ? `Bloco ${pkg.unit.block} · ` : ""}Unidade ${pkg.unit.number}`
+          : ""}
       </Typography>
 
       {error && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>{error}</Alert>}

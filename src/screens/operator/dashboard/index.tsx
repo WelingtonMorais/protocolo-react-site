@@ -170,7 +170,7 @@ export const OperatorDashboard = (): React.JSX.Element => {
                       <TableCell>{pkg.recipientName ?? "—"}</TableCell>
                       <TableCell>
                         {pkg.unit
-                          ? `${pkg.unit.block ? pkg.unit.block + " / " : ""}${pkg.unit.number}`
+                          ? `${pkg.unit.block ? `Bloco ${pkg.unit.block} · ` : ""}Unidade ${pkg.unit.number}`
                           : "—"}
                       </TableCell>
                       <TableCell>{pkg.carrier ?? "—"}</TableCell>

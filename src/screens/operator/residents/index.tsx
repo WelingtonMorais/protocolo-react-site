@@ -193,7 +193,7 @@ export const ResidentsScreen = (): React.JSX.Element => {
                       <TableCell>{member.email}</TableCell>
                       <TableCell>
                         {member.unit
-                          ? `${member.unit.block ? member.unit.block + " / " : ""}${member.unit.number}`
+                          ? `${member.unit.block ? `Bloco ${member.unit.block} · ` : ""}Unidade ${member.unit.number}`
                           : "—"}
                       </TableCell>
                       <TableCell>

@@ -45,14 +45,14 @@ function apiErrorMessage(err: unknown, fallback: string): string {
   return fallback;
 }
 
-/** Unidade no formulário → campo `block` na API (1 letra A–Z). */
-function sanitizeUnitLetter(raw: string): string {
+/** Bloco no formulário → campo `block` na API (1 letra A–Z). */
+function sanitizeBlockLetter(raw: string): string {
   const c = raw.replace(/[^a-zA-Z]/g, "").slice(0, 1);
   return c.toUpperCase();
 }
 
-/** Bloco no formulário → campo `number` na API (até 5 dígitos). */
-function sanitizeBlockDigits(raw: string): string {
+/** Unidade no formulário → campo `number` na API (até 5 dígitos). */
+function sanitizeUnitDigits(raw: string): string {
   return raw.replace(/\D/g, "").slice(0, 5);
 }
 
@@ -70,7 +70,7 @@ function sortUnitsForDisplay(list: Unit[]): Unit[] {
   });
 }
 
-function formatUnitLetter(block: string | undefined): string {
+function formatBlockLetter(block: string | undefined): string {
   if (!block || block === "-") return "—";
   return block.toUpperCase();
 }
@@ -85,10 +85,10 @@ export const UnitsScreen = (): React.JSX.Element => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [condominiumId, setCondominiumId] = useState<string | null>(null);
 
-  /** 1 letra (Unidade → API block) */
-  const [unitLetter, setUnitLetter] = useState("");
-  /** até 5 dígitos (Bloco → API number) */
-  const [blockDigits, setBlockDigits] = useState("");
+  /** 1 letra (Bloco → API block) */
+  const [blockLetter, setBlockLetter] = useState("");
+  /** até 5 dígitos (Unidade → API number) */
+  const [unitDigits, setUnitDigits] = useState("");
   const [creating, setCreating] = useState(false);
 
   const sortedUnits = useMemo(() => sortUnitsForDisplay(units), [units]);
@@ -128,11 +128,11 @@ export const UnitsScreen = (): React.JSX.Element => {
   }, [authLoading, refetch]);
 
   const canCreate =
-    unitLetter.length === 1 &&
-    /^[A-Z]$/.test(unitLetter) &&
-    blockDigits.length >= 1 &&
-    blockDigits.length <= 5 &&
-    /^\d+$/.test(blockDigits);
+    blockLetter.length === 1 &&
+    /^[A-Z]$/.test(blockLetter) &&
+    unitDigits.length >= 1 &&
+    unitDigits.length <= 5 &&
+    /^\d+$/.test(unitDigits);
 
   const handleCreate = async (): Promise<void> => {
     if (!condominiumId || !canCreate) return;
@@ -140,12 +140,12 @@ export const UnitsScreen = (): React.JSX.Element => {
     try {
       await api.post("/employee/units", {
         condominiumId,
-        block: unitLetter,
-        number: blockDigits,
+        block: blockLetter,
+        number: unitDigits,
       });
       setDialogOpen(false);
-      setUnitLetter("");
-      setBlockDigits("");
+      setBlockLetter("");
+      setUnitDigits("");
       await refetch();
     } catch (err) {
       setError(apiErrorMessage(err, "Erro ao criar unidade."));
@@ -155,8 +155,8 @@ export const UnitsScreen = (): React.JSX.Element => {
   };
 
   const resetDialog = (): void => {
-    setUnitLetter("");
-    setBlockDigits("");
+    setBlockLetter("");
+    setUnitDigits("");
   };
 
   return (
@@ -165,7 +165,7 @@ export const UnitsScreen = (): React.JSX.Element => {
         <Box>
           <Typography variant="h5">Unidades</Typography>
           <Typography variant="body2" color="text.secondary">
-            Unidade = letra (ordem alfabética). Bloco = número do apartamento/sala (até 5 dígitos).
+            Bloco = letra (A-Z). Unidade = número do apartamento/sala (até 5 dígitos).
           </Typography>
         </Box>
         <Box sx={{ display: "flex", gap: 1 }}>
@@ -232,14 +232,14 @@ export const UnitsScreen = (): React.JSX.Element => {
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell>Unidade</TableCell>
                     <TableCell>Bloco</TableCell>
+                    <TableCell>Unidade</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {sortedUnits.map((unit) => (
                     <TableRow key={unit.id} hover>
-                      <TableCell sx={{ fontWeight: 600 }}>{formatUnitLetter(unit.block)}</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>{formatBlockLetter(unit.block)}</TableCell>
                       <TableCell>{unit.number}</TableCell>
                     </TableRow>
                   ))}
@@ -262,33 +262,33 @@ export const UnitsScreen = (): React.JSX.Element => {
         <DialogTitle>Nova Unidade</DialogTitle>
         <DialogContent>
           <TextField
-            label="Unidade"
-            fullWidth
-            required
-            value={unitLetter}
-            onChange={(e) => setUnitLetter(sanitizeUnitLetter(e.target.value))}
-            sx={{ mb: 2, mt: 1 }}
-            placeholder="A"
-            helperText="Uma letra (A–Z), maiúscula. Ordem alfabética entre unidades."
-            inputProps={{
-              maxLength: 1,
-              inputMode: "text",
-              "aria-label": "Letra da unidade",
-            }}
-          />
-          <TextField
             label="Bloco"
             fullWidth
             required
-            value={blockDigits}
-            onChange={(e) => setBlockDigits(sanitizeBlockDigits(e.target.value))}
+            value={blockLetter}
+            onChange={(e) => setBlockLetter(sanitizeBlockLetter(e.target.value))}
+            sx={{ mb: 2, mt: 1 }}
+            placeholder="A"
+            helperText="Uma letra (A–Z), maiúscula."
+            inputProps={{
+              maxLength: 1,
+              inputMode: "text",
+              "aria-label": "Letra do bloco",
+            }}
+          />
+          <TextField
+            label="Unidade"
+            fullWidth
+            required
+            value={unitDigits}
+            onChange={(e) => setUnitDigits(sanitizeUnitDigits(e.target.value))}
             placeholder="Ex: 101"
             helperText="Somente números, até 5 caracteres, sem espaços."
             inputProps={{
               maxLength: 5,
               inputMode: "numeric",
               pattern: "\\d*",
-              "aria-label": "Número do bloco",
+              "aria-label": "Número da unidade",
             }}
           />
         </DialogContent>

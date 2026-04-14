@@ -19,6 +19,7 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  Divider as MuiDivider,
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -54,8 +55,8 @@ interface UnitMemberRow {
 
 function formatUnitLabel(block: string | null | undefined, number: string): string {
   const b = block?.trim();
-  if (!b || b === "-") return `Bloco ${number}`;
-  return `Unidade ${b} · Bloco ${number}`;
+  if (!b || b === "-") return `Unidade ${number}`;
+  return `Bloco ${b} · Unidade ${number}`;
 }
 
 function formatUnitsListLabel(u: Unit): string {
@@ -491,13 +492,25 @@ export const RegisterPackageScreen = (): React.JSX.Element => {
                     value={receiverId ?? ""}
                     onChange={(e) => setReceiverId(e.target.value || null)}
                   >
-                    {unitMembers.map((m) => (
-                      <FormControlLabel
-                        key={m.id}
-                        value={m.userId}
-                        control={<Radio size="small" />}
-                        label={`${m.user.name} (${m.user.email})`}
-                      />
+                    {unitMembers.map((m, index) => (
+                      <Box key={m.id}>
+                        <FormControlLabel
+                          sx={{ width: "100%", py: 0.75, m: 0, alignItems: "flex-start" }}
+                          value={m.userId}
+                          control={<Radio size="small" sx={{ mt: 0.25 }} />}
+                          label={
+                            <Box>
+                              <Typography variant="body2" fontWeight={600}>
+                                {m.user.name}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {m.user.email}
+                              </Typography>
+                            </Box>
+                          }
+                        />
+                        {index < unitMembers.length - 1 && <MuiDivider sx={{ ml: 4.5 }} />}
+                      </Box>
                     ))}
                   </RadioGroup>
                 )}
