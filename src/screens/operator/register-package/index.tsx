@@ -28,7 +28,7 @@ import axios from "axios";
 
 import { api } from "@/services/api";
 import { useAuth } from "@/providers/AuthProvider";
-import type { Unit } from "@/types/operator.types";
+import type { Courier, Unit } from "@/types/operator.types";
 import { optimizeImageForUpload } from "@/utils/image-optimizer";
 
 interface MembershipSearchRow {
@@ -117,6 +117,8 @@ export const RegisterPackageScreen = (): React.JSX.Element => {
   const [receiverId, setReceiverId] = useState<string | null>(null);
   const [unitMembers, setUnitMembers] = useState<UnitMemberRow[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(false);
+  const [couriers, setCouriers] = useState<Courier[]>([]);
+  const [courierId, setCourierId] = useState("");
 
   const [description, setDescription] = useState("");
   const [carrier, setCarrier] = useState("");
@@ -152,10 +154,20 @@ export const RegisterPackageScreen = (): React.JSX.Element => {
     }
   }, [user?.condominiumId]);
 
+  const loadCouriers = useCallback(async (): Promise<void> => {
+    try {
+      const response = await api.get<Courier[]>("/employee/couriers");
+      setCouriers(response.data ?? []);
+    } catch {
+      setCouriers([]);
+    }
+  }, []);
+
   useEffect(() => {
     if (authLoading) return;
     void loadUnits();
-  }, [authLoading, loadUnits]);
+    void loadCouriers();
+  }, [authLoading, loadUnits, loadCouriers]);
 
   useEffect(() => {
     if (error) scrollAreaRef.current?.scrollTo({ top: 0, behavior: "smooth" });
@@ -234,10 +246,10 @@ export const RegisterPackageScreen = (): React.JSX.Element => {
   );
 
   const canSubmit = useMemo(() => {
-    if (!unitId || finalDescription.length < 2) return false;
+    if (!unitId || finalDescription.length < 2 || !courierId) return false;
     if (unitMembers.length > 0 && !receiverId) return false;
     return true;
-  }, [unitId, finalDescription.length, unitMembers.length, receiverId]);
+  }, [unitId, finalDescription.length, unitMembers.length, receiverId, courierId]);
 
   useEffect(() => {
     return () => {
@@ -294,6 +306,7 @@ export const RegisterPackageScreen = (): React.JSX.Element => {
     setDescription("");
     setCarrier("");
     setTrackingCode("");
+    setCourierId("");
     setPhoto(null);
     if (photoPreview) URL.revokeObjectURL(photoPreview);
     setPhotoPreview(null);
@@ -316,6 +329,10 @@ export const RegisterPackageScreen = (): React.JSX.Element => {
       setError("Selecione o morador destinatário.");
       return;
     }
+    if (!courierId) {
+      setError("Selecione o mensageiro responsavel.");
+      return;
+    }
     setLoading(true);
     try {
       let photoUrl: string | null = null;
@@ -333,7 +350,7 @@ export const RegisterPackageScreen = (): React.JSX.Element => {
         description: finalDescription,
         receiverId: receiverId || null,
         photoUrl,
-        courierId: null,
+        courierId,
       });
 
       setSuccess(true);
@@ -512,6 +529,26 @@ export const RegisterPackageScreen = (): React.JSX.Element => {
                 </TextField>
               </AccordionDetails>
             </Accordion>
+
+            <TextField
+              label="Mensageiro responsavel"
+              select
+              fullWidth
+              required
+              value={courierId}
+              onChange={(e) => setCourierId(e.target.value)}
+              sx={{ mb: 2 }}
+              helperText="Obrigatorio para rastrear quem registrou a entrada."
+            >
+              <MenuItem value="">
+                <em>Selecione</em>
+              </MenuItem>
+              {couriers.map((courier) => (
+                <MenuItem key={courier.id} value={courier.id}>
+                  {courier.name} - token {courier.token}
+                </MenuItem>
+              ))}
+            </TextField>
 
             <TextField
               label="Descrição da encomenda"

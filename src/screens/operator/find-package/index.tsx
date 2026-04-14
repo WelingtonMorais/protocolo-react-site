@@ -62,6 +62,7 @@ function getPackagePhotoUrl(pkg: EmployeePickupFindResponse["pkg"]): string | un
 
 export const FindPackageScreen = (): React.JSX.Element => {
   const [token, setToken] = useState("");
+  const [courierToken, setCourierToken] = useState("");
   const [scannerOpen, setScannerOpen] = useState(false);
   const [result, setResult] = useState<EmployeePickupFindResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -95,11 +96,16 @@ export const FindPackageScreen = (): React.JSX.Element => {
 
   const handleDeliver = async (): Promise<void> => {
     if (!result?.pkg || !result.code) return;
+    if (!courierToken.trim()) {
+      setError("Informe o token do mensageiro que esta realizando a entrega.");
+      return;
+    }
     setDelivering(true);
     setError(null);
     try {
       await api.post(`/employee/packages/${result.pkg.id}/deliver`, {
         token: result.code,
+        courierToken: courierToken.trim(),
       });
       setDelivered(true);
     } catch (err) {
@@ -111,6 +117,7 @@ export const FindPackageScreen = (): React.JSX.Element => {
 
   const handleReset = (): void => {
     setToken("");
+    setCourierToken("");
     setResult(null);
     setDelivered(false);
     setError(null);
@@ -231,6 +238,16 @@ export const FindPackageScreen = (): React.JSX.Element => {
                 </Typography>
               </Box>
             </Box>
+            <TextField
+              label="Token do mensageiro (4 digitos)"
+              fullWidth
+              required
+              value={courierToken}
+              onChange={(e) => setCourierToken(e.target.value.replace(/\D/g, "").slice(0, 4))}
+              sx={{ mb: 2 }}
+              helperText="Obrigatorio para registrar quem finalizou a retirada."
+              inputProps={{ inputMode: "numeric", pattern: "\\d*", maxLength: 4 }}
+            />
             <Button
               variant="contained"
               color="success"

@@ -21,6 +21,7 @@ import EmailIcon from "@mui/icons-material/Email";
 import ApartmentIcon from "@mui/icons-material/Apartment";
 import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
 import NotificationsOffIcon from "@mui/icons-material/NotificationsOff";
+import SupportAgentIcon from "@mui/icons-material/SupportAgent";
 
 import { useAuth } from "@/providers/AuthProvider";
 import { useNotificationUI } from "@/providers/NotificationUIProvider";
@@ -109,6 +110,27 @@ export const ClientSettingsScreen = (): React.JSX.Element => {
           </Stack>
 
           <Divider sx={{ mb: 2 }} />
+
+          {user?.role !== "CLIENT" && (
+            <>
+              <Typography variant="h6" mb={1}>Suporte</Typography>
+              <Alert severity="info" icon={<SupportAgentIcon />} sx={{ mb: 2 }}>
+                Para importacao rapida de unidades em lote, fale com nosso suporte no WhatsApp.
+              </Alert>
+              <Button
+                component="a"
+                href="https://wa.me/5519993148395"
+                target="_blank"
+                rel="noopener noreferrer"
+                variant="outlined"
+                fullWidth
+                sx={{ mb: 2 }}
+              >
+                Chamar suporte: +55 19 99314-8395
+              </Button>
+              <Divider sx={{ mb: 2 }} />
+            </>
+          )}
 
           <Button
             variant="outlined"
