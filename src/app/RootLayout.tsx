@@ -9,6 +9,7 @@ import { MenuProvider } from "@/providers/useMenu";
 import { NotificationUIProvider } from "@/providers/NotificationUIProvider";
 import { TrainingProvider } from "@/providers/TrainingProvider";
 import { TrainingDialogs } from "@/components/training/TrainingDialogs";
+import { SingleTabGuard } from "@/components/app/SingleTabGuard";
 import { CustomCursor } from "@/components/ui/CustomCursor";
 import "@/assets/styles/global.css";
 
@@ -23,6 +24,7 @@ export const RootLayout = (): React.JSX.Element => {
         <MenuProvider>
           <NotificationUIProvider>
             <TrainingProvider>
+              <SingleTabGuard />
               <TrainingDialogs />
               <AnimatePresence mode="wait" initial={false}>
                 <Outlet key={location.pathname} />
