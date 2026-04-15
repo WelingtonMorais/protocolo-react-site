@@ -116,6 +116,12 @@ export const PlanCatalogScreen = (): React.JSX.Element => {
       {error && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>{error}</Alert>}
       {success && <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess(null)}>{success}</Alert>}
 
+      <Alert severity="info" sx={{ mb: 2 }}>
+        No app do banco ou fatura do cartão, a cobrança pode aparecer em nome de{" "}
+        <strong>Welington Morais</strong> (titular / pessoa física responsável pelo recebimento). Isso é esperado e
+        corresponde à assinatura do Protocolo.
+      </Alert>
+
       {pendingPayment?.status === "PENDING" && (
         <Alert severity="warning" sx={{ mb: 2 }}>
           Pagamento pendente para o plano <strong>{pendingPayment.planType}</strong>. Assim que aprovado, a assinatura atualiza automaticamente.

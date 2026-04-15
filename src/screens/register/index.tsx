@@ -403,10 +403,17 @@ export const RegisterScreen = (): React.JSX.Element => {
                     fullWidth
                     required
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
+                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 15))}
                     sx={{ mb: 2 }}
                     size="medium"
-                    placeholder="(00) 00000-0000"
+                    placeholder="11999999999"
+                    helperText="Apenas números, sem espaços."
+                    inputProps={{
+                      inputMode: "numeric",
+                      pattern: "[0-9]*",
+                      maxLength: 15,
+                      autoComplete: "tel-national",
+                    }}
                   />
                   <TextField
                     label="Senha"

@@ -119,7 +119,7 @@ export const RegisterPackageScreen = (): React.JSX.Element => {
   const [unitMembers, setUnitMembers] = useState<UnitMemberRow[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [couriers, setCouriers] = useState<Courier[]>([]);
-  const [courierId, setCourierId] = useState("");
+  const [courierToken, setCourierToken] = useState("");
 
   const [description, setDescription] = useState("");
   const [carrier, setCarrier] = useState("");
@@ -247,10 +247,11 @@ export const RegisterPackageScreen = (): React.JSX.Element => {
   );
 
   const canSubmit = useMemo(() => {
-    if (!unitId || finalDescription.length < 2 || !courierId) return false;
+    if (!unitId || finalDescription.length < 2 || courierToken.length !== 4) return false;
+    if (!couriers.some((c) => c.token === courierToken)) return false;
     if (unitMembers.length > 0 && !receiverId) return false;
     return true;
-  }, [unitId, finalDescription.length, unitMembers.length, receiverId, courierId]);
+  }, [unitId, finalDescription.length, unitMembers.length, receiverId, courierToken, couriers]);
 
   useEffect(() => {
     return () => {
@@ -307,7 +308,7 @@ export const RegisterPackageScreen = (): React.JSX.Element => {
     setDescription("");
     setCarrier("");
     setTrackingCode("");
-    setCourierId("");
+    setCourierToken("");
     setPhoto(null);
     if (photoPreview) URL.revokeObjectURL(photoPreview);
     setPhotoPreview(null);
@@ -330,8 +331,13 @@ export const RegisterPackageScreen = (): React.JSX.Element => {
       setError("Selecione o morador destinatário.");
       return;
     }
-    if (!courierId) {
-      setError("Selecione o mensageiro responsavel.");
+    if (courierToken.length !== 4) {
+      setError("Informe o PIN do mensageiro (4 dígitos).");
+      return;
+    }
+    const courier = couriers.find((c) => c.token === courierToken);
+    if (!courier) {
+      setError("PIN do mensageiro não encontrado. Confira os 4 dígitos.");
       return;
     }
     setLoading(true);
@@ -351,7 +357,7 @@ export const RegisterPackageScreen = (): React.JSX.Element => {
         description: finalDescription,
         receiverId: receiverId || null,
         photoUrl,
-        courierId,
+        courierId: courier.id,
       });
 
       setSuccess(true);
@@ -544,24 +550,15 @@ export const RegisterPackageScreen = (): React.JSX.Element => {
             </Accordion>
 
             <TextField
-              label="Mensageiro responsavel"
-              select
+              label="PIN do mensageiro (4 dígitos)"
               fullWidth
               required
-              value={courierId}
-              onChange={(e) => setCourierId(e.target.value)}
+              value={courierToken}
+              onChange={(e) => setCourierToken(e.target.value.replace(/\D/g, "").slice(0, 4))}
               sx={{ mb: 2 }}
-              helperText="Obrigatorio para rastrear quem registrou a entrada."
-            >
-              <MenuItem value="">
-                <em>Selecione</em>
-              </MenuItem>
-              {couriers.map((courier) => (
-                <MenuItem key={courier.id} value={courier.id}>
-                  {courier.name} - token {courier.token}
-                </MenuItem>
-              ))}
-            </TextField>
+              helperText="Obrigatório — mesmo PIN usado na entrega da encomenda."
+              inputProps={{ inputMode: "numeric", pattern: "\\d*", maxLength: 4 }}
+            />
 
             <TextField
               label="Descrição da encomenda"

@@ -1,5 +1,5 @@
 import React from "react";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Box,
   Card,
@@ -20,17 +20,20 @@ import {
   Step,
   StepLabel,
   Snackbar,
+  Divider,
 } from "@mui/material";
 import Inventory2Icon from "@mui/icons-material/Inventory2";
 import AddHomeIcon from "@mui/icons-material/AddHome";
 import ApartmentIcon from "@mui/icons-material/Apartment";
 import HistoryIcon from "@mui/icons-material/History";
+import QrCodeScannerIcon from "@mui/icons-material/QrCodeScanner";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 import { api } from "@/services/api";
 import { useAuth } from "@/providers/AuthProvider";
 import { StaggerContainer, StaggerItem } from "@/components/ui/ScrollReveal";
+import { QRScanner } from "@/components/QRScanner";
 import type { ClientMembership, ClientPendingAccessRequest } from "@/types/client.types";
 import { parseClientPackagesResponse } from "@/types/client.types";
 
@@ -60,6 +63,10 @@ function formatClientUnitLine(unit: { number: string; block: string | null | und
   return `Bloco ${b} · Unidade ${unit.number}`;
 }
 
+function normalizeCondoInviteCode(raw: string): string {
+  return raw.trim().replace(/\s+/g, "").toUpperCase();
+}
+
 export const ClientDashboard = (): React.JSX.Element => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -78,10 +85,16 @@ export const ClientDashboard = (): React.JSX.Element => {
   const [cpf, setCpf] = useState("");
   const [linkLoading, setLinkLoading] = useState(false);
   const [linkError, setLinkError] = useState<string | null>(null);
+  const [linkScannerOpen, setLinkScannerOpen] = useState(false);
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string }>({
     open: false,
     message: "",
   });
+
+  const handleCondoQrScan = useCallback((decoded: string) => {
+    setCondoCode(normalizeCondoInviteCode(decoded));
+    setLinkScannerOpen(false);
+  }, []);
 
   const openLinkDialog = (): void => {
     setLinkStep(0);
@@ -90,6 +103,7 @@ export const ClientDashboard = (): React.JSX.Element => {
     setUnits([]);
     setSelectedUnit("");
     setCpf("");
+    setLinkScannerOpen(false);
     setLinkDialogOpen(true);
   };
 
@@ -319,6 +333,7 @@ export const ClientDashboard = (): React.JSX.Element => {
           setLinkDialogOpen(false);
           setLinkStep(0);
           setLinkError(null);
+          setLinkScannerOpen(false);
         }}
         maxWidth="xs"
         fullWidth
@@ -334,14 +349,28 @@ export const ClientDashboard = (): React.JSX.Element => {
           {linkError && <Alert severity="error" sx={{ mb: 2 }}>{linkError}</Alert>}
 
           {linkStep === 0 && (
-            <TextField
-              label="Código do condomínio"
-              fullWidth
-              value={condoCode}
-              onChange={(e) => setCondoCode(e.target.value.toUpperCase())}
-              placeholder="Ex: ABC123"
-              autoFocus
-            />
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              <TextField
+                label="Código do condomínio"
+                fullWidth
+                value={condoCode}
+                onChange={(e) => setCondoCode(normalizeCondoInviteCode(e.target.value))}
+                placeholder="Ex: ABC123"
+                autoFocus
+                helperText="Digite o código ou escaneie o QR de convite do condomínio."
+              />
+              <Divider>
+                <Typography variant="caption" color="text.secondary">ou</Typography>
+              </Divider>
+              <Button
+                variant="outlined"
+                fullWidth
+                startIcon={<QrCodeScannerIcon />}
+                onClick={() => setLinkScannerOpen(true)}
+              >
+                Escanear QR Code
+              </Button>
+            </Box>
           )}
 
           {linkStep === 1 && (
@@ -395,6 +424,7 @@ export const ClientDashboard = (): React.JSX.Element => {
               setLinkDialogOpen(false);
               setLinkStep(0);
               setLinkError(null);
+              setLinkScannerOpen(false);
             }}
           >
             Cancelar
@@ -419,6 +449,12 @@ export const ClientDashboard = (): React.JSX.Element => {
           )}
         </DialogActions>
       </Dialog>
+
+      <QRScanner
+        open={linkScannerOpen}
+        onClose={() => setLinkScannerOpen(false)}
+        onScan={handleCondoQrScan}
+      />
 
       <Snackbar
         open={snackbar.open}

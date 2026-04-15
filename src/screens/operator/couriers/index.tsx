@@ -27,6 +27,13 @@ import { useNavigate } from "react-router-dom";
 import { couriersService } from "./services/couriers.service";
 import type { Courier } from "@/types/operator.types";
 
+function maskCourierTokenDisplay(token: string): string {
+  const t = token.trim();
+  if (t.length === 4) return `${t[0]}**${t[3]}`;
+  if (t.length <= 1) return "****";
+  return `${t[0]}${"*".repeat(Math.max(0, t.length - 2))}${t[t.length - 1]}`;
+}
+
 export const CouriersScreen = (): React.JSX.Element => {
   const navigate = useNavigate();
   const [couriers, setCouriers] = useState<Courier[]>([]);
@@ -122,7 +129,7 @@ export const CouriersScreen = (): React.JSX.Element => {
                         {courier.email}
                       </TableCell>
                       <TableCell>
-                        <Chip label={courier.token} size="small" variant="outlined" />
+                        <Chip label={maskCourierTokenDisplay(courier.token)} size="small" variant="outlined" />
                       </TableCell>
                       <TableCell align="right">
                         <Tooltip title="Editar">

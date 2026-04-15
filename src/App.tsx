@@ -23,6 +23,9 @@ const RegisterScreen = lazy(() =>
 const ForgotPasswordScreen = lazy(() =>
   import("./screens/forgot-password/index").then((m) => ({ default: m.ForgotPasswordScreen }))
 );
+const PaymentReturnScreen = lazy(() =>
+  import("./screens/payment/return").then((m) => ({ default: m.PaymentReturnScreen }))
+);
 
 // Operator screens
 const OperatorDashboard = lazy(() =>
@@ -123,6 +126,9 @@ const App = (): React.JSX.Element => {
             <Route path="/login" element={<LoginScreen />} />
             <Route path="/cadastro" element={<RegisterScreen />} />
             <Route path="/recuperar-senha" element={<ForgotPasswordScreen />} />
+            <Route path="/payment/success" element={<PaymentReturnScreen />} />
+            <Route path="/payment/failure" element={<PaymentReturnScreen />} />
+            <Route path="/payment/pending" element={<PaymentReturnScreen />} />
 
             {/* Protected routes */}
             <Route element={<PrivateRoute />}>
