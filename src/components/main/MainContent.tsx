@@ -3,6 +3,7 @@ import { Box } from "@mui/material";
 import { Outlet } from "react-router-dom";
 import { AnimatedPage } from "@/components/ui/AnimatedPage";
 import { PushNudgeBanner } from "@/components/notifications/PushNudgeBanner";
+import { PwaInstallNudge } from "@/components/pwa/PwaInstallNudge";
 
 const DRAWER_WIDTH = 240;
 
@@ -39,6 +40,7 @@ export const MainContent = ({ drawerOpen }: MainContentProps): React.JSX.Element
       })}
     >
       <PushNudgeBanner />
+      <PwaInstallNudge />
       <AnimatedPage>
         <Outlet />
       </AnimatedPage>

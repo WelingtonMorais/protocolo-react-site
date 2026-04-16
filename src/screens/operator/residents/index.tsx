@@ -5,13 +5,6 @@ import {
   Card,
   CardContent,
   Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
   CircularProgress,
   Alert,
   TextField,
@@ -19,6 +12,7 @@ import {
   Avatar,
   Chip,
   Button,
+  Divider,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import { useNavigate } from "react-router-dom";
@@ -139,74 +133,78 @@ export const ResidentsScreen = (): React.JSX.Element => {
         </Alert>
       )}
 
-      <Card>
-        <CardContent>
-          <TextField
-            placeholder="Buscar por nome, e-mail ou unidade..."
-            fullWidth
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            sx={{ mb: 2 }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon fontSize="small" />
-                </InputAdornment>
-              ),
-            }}
-          />
+      <TextField
+        placeholder="Buscar por nome, e-mail ou unidade..."
+        fullWidth
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        sx={{ mb: 2 }}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <SearchIcon fontSize="small" />
+            </InputAdornment>
+          ),
+        }}
+      />
 
-          {loading ? (
-            <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-              <CircularProgress />
-            </Box>
-          ) : noCondo ? (
-            <Typography color="text.secondary" textAlign="center" py={3}>
+      {loading ? (
+        <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
+          <CircularProgress />
+        </Box>
+      ) : noCondo ? (
+        <Card>
+          <CardContent sx={{ textAlign: "center", py: 4 }}>
+            <Typography color="text.secondary">
               Nenhum condomínio associado à sua conta ainda.
             </Typography>
-          ) : filtered.length === 0 ? (
-            <Typography color="text.secondary" textAlign="center" py={3}>
+          </CardContent>
+        </Card>
+      ) : filtered.length === 0 ? (
+        <Card>
+          <CardContent sx={{ textAlign: "center", py: 4 }}>
+            <Typography color="text.secondary">
               {search ? "Nenhum resultado encontrado." : "Nenhum morador cadastrado."}
             </Typography>
-          ) : (
-            <TableContainer component={Paper} elevation={0} variant="outlined">
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Morador</TableCell>
-                    <TableCell>E-mail</TableCell>
-                    <TableCell>Unidade</TableCell>
-                    <TableCell>Status</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {filtered.map((member) => (
-                    <TableRow key={member.id} hover>
-                      <TableCell>
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                          <Avatar sx={{ width: 30, height: 30, fontSize: 13, bgcolor: "primary.light" }}>
-                            {member.name[0]?.toUpperCase()}
-                          </Avatar>
-                          {member.name}
-                        </Box>
-                      </TableCell>
-                      <TableCell>{member.email}</TableCell>
-                      <TableCell>
-                        {member.unit
-                          ? `${member.unit.block ? `Bloco ${member.unit.block} · ` : ""}Unidade ${member.unit.number}`
-                          : "—"}
-                      </TableCell>
-                      <TableCell>
-                        <Chip label={member.status} size="small" color="success" />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      ) : (
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+          {filtered.map((member) => (
+            <Card key={member.id} variant="outlined">
+              <CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
+                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, minWidth: 0 }}>
+                    <Avatar sx={{ width: 38, height: 38, fontSize: 15, bgcolor: "primary.light", flexShrink: 0 }}>
+                      {member.name[0]?.toUpperCase()}
+                    </Avatar>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography variant="subtitle2" fontWeight={700} noWrap>
+                        {member.name}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary" noWrap display="block">
+                        {member.email}
+                      </Typography>
+                    </Box>
+                  </Box>
+                  <Chip label={member.status} size="small" color="success" sx={{ ml: 1, flexShrink: 0 }} />
+                </Box>
+
+                {member.unit && (
+                  <>
+                    <Divider sx={{ my: 1 }} />
+                    <Typography variant="caption" color="text.secondary">
+                      {member.unit.block
+                        ? `Bloco ${member.unit.block} · Unidade ${member.unit.number}`
+                        : `Unidade ${member.unit.number}`}
+                    </Typography>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </Box>
+      )}
     </Box>
   );
 };

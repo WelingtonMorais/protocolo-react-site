@@ -13,7 +13,10 @@ import {
   Grid,
   IconButton,
   Tooltip,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
+import SwipeIcon from "@mui/icons-material/Swipe";
 import QrCode2Icon from "@mui/icons-material/QrCode2";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
@@ -25,6 +28,8 @@ import { type ClientPackage, parseClientPackagesResponse } from "@/types/client.
 
 export const PackagesScreen = (): React.JSX.Element => {
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [tab, setTab] = useState(0);
   const [packages, setPackages] = useState<ClientPackage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,10 +74,17 @@ export const PackagesScreen = (): React.JSX.Element => {
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
-      <Tabs value={tab} onChange={(_, v: number) => setTab(v)} sx={{ mb: 3 }}>
+      <Tabs value={tab} onChange={(_, v: number) => setTab(v)} sx={{ mb: isMobile ? 1 : 3 }}>
         <Tab label={`Aguardando (${pending.length})`} />
         <Tab label={`Entregues (${delivered.length})`} />
       </Tabs>
+
+      {isMobile && (
+        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 2, opacity: 0.5 }}>
+          <SwipeIcon fontSize="small" />
+          <Typography variant="caption">Toque nas abas para alternar entre pendentes e entregues</Typography>
+        </Box>
+      )}
 
       {loading ? (
         <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>

@@ -106,7 +106,19 @@ export const TrainingProvider = ({ children }: { children: ReactNode }): React.J
     }
     const sessionKey = `client-welcome-shown:${user.id}`;
     const alreadyShown = sessionStorage.getItem(sessionKey) === "1";
-    if (!alreadyShown) setClientWelcomeOpen(true);
+    if (alreadyShown) return;
+
+    void (async () => {
+      const memberships = await api
+        .get<unknown[]>("/client/memberships")
+        .then((r) => r.data)
+        .catch(() => null);
+      if (Array.isArray(memberships) && memberships.length > 0) {
+        sessionStorage.setItem(sessionKey, "1");
+        return;
+      }
+      setClientWelcomeOpen(true);
+    })();
   }, [user]);
 
   useEffect(() => {
