@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Box,
   Card,
@@ -25,6 +25,7 @@ import SupportAgentIcon from "@mui/icons-material/SupportAgent";
 
 import { useAuth } from "@/providers/AuthProvider";
 import { useNotificationUI } from "@/providers/NotificationUIProvider";
+import { humanMessageForBlockReason } from "@/utils/web-push-env";
 
 export const ClientSettingsScreen = (): React.JSX.Element => {
   const { user, logout } = useAuth();
@@ -35,15 +36,25 @@ export const ClientSettingsScreen = (): React.JSX.Element => {
     pushBusy,
     enablePush,
     disablePush,
+    pushStaticBlockReason,
   } = useNotificationUI();
 
+  const [pushActionError, setPushActionError] = useState<string | null>(null);
+
   const pushStatusText = !pushSupported
-    ? "Seu navegador nao oferece suporte a notificacoes."
+    ? pushStaticBlockReason
+      ? humanMessageForBlockReason(pushStaticBlockReason)
+      : "Este ambiente ainda nao esta pronto para notificacoes push. Recarregue a pagina ou use HTTPS."
     : pushPermission === "denied"
     ? "Notificacoes bloqueadas no navegador. Libere a permissao para ativar."
     : pushEnabled
     ? "Ativas e prontas para receber alertas em tempo real."
     : "Desativadas. Ative para receber avisos de encomendas e alertas.";
+
+  const pushMainAlertSeverity =
+    pushEnabled ? "success"
+    : !pushSupported && pushStaticBlockReason === "ios_needs_pwa" ? "info"
+    : "warning";
 
   return (
     <Box sx={{ maxWidth: 480, mx: "auto" }}>
@@ -87,7 +98,12 @@ export const ClientSettingsScreen = (): React.JSX.Element => {
       <Card>
         <CardContent>
           <Typography variant="h6" mb={1}>Notificacoes push</Typography>
-          <Alert severity={pushEnabled ? "success" : "warning"} sx={{ mb: 2 }}>
+          {pushActionError && (
+            <Alert severity="error" sx={{ mb: 2 }} onClose={() => setPushActionError(null)}>
+              {pushActionError}
+            </Alert>
+          )}
+          <Alert severity={pushMainAlertSeverity} sx={{ mb: 2 }}>
             {pushStatusText}
           </Alert>
           <Stack direction="row" spacing={1} sx={{ mb: 3 }}>
@@ -95,7 +111,16 @@ export const ClientSettingsScreen = (): React.JSX.Element => {
               variant="contained"
               startIcon={<NotificationsActiveIcon />}
               disabled={!pushSupported || pushBusy || pushEnabled}
-              onClick={() => void enablePush()}
+              onClick={() => {
+                setPushActionError(null);
+                void (async () => {
+                  try {
+                    await enablePush();
+                  } catch (e) {
+                    setPushActionError(e instanceof Error ? e.message : "Erro ao ativar notificacoes.");
+                  }
+                })();
+              }}
             >
               {pushBusy ? <CircularProgress size={18} color="inherit" /> : "Ativar"}
             </Button>
@@ -103,7 +128,16 @@ export const ClientSettingsScreen = (): React.JSX.Element => {
               variant="outlined"
               startIcon={<NotificationsOffIcon />}
               disabled={!pushSupported || pushBusy || !pushEnabled}
-              onClick={() => void disablePush()}
+              onClick={() => {
+                setPushActionError(null);
+                void (async () => {
+                  try {
+                    await disablePush();
+                  } catch (e) {
+                    setPushActionError(e instanceof Error ? e.message : "Erro ao desativar notificacoes.");
+                  }
+                })();
+              }}
             >
               Desativar
             </Button>

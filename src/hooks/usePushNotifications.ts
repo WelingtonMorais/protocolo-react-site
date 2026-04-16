@@ -1,5 +1,13 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import axios from "axios";
 import { api } from "@/services/api";
+import {
+  getWebPushStaticBlockReason,
+  hasPushManagerAfterSwReady,
+  humanMessageForBlockReason,
+  needsPwaInstallForIosWebPush,
+  type WebPushStaticBlockReason,
+} from "@/utils/web-push-env";
 
 export type PushPermission = "default" | "granted" | "denied" | "unsupported";
 
@@ -9,6 +17,10 @@ export interface UsePushNotifications {
   isLoading: boolean;
   subscribe: () => Promise<void>;
   unsubscribe: () => Promise<void>;
+  /** Ambiente apto a subscrever (HTTPS, SW, Notification, iOS em PWA se aplicável, PushManager após SW). */
+  pushCapable: boolean;
+  staticBlockReason: WebPushStaticBlockReason;
+  needsPwaInstallForPush: boolean;
 }
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
@@ -27,17 +39,50 @@ async function getServiceWorkerRegistration(): Promise<ServiceWorkerRegistration
   }
 }
 
+function messageFromSubscribeError(err: unknown): string {
+  if (axios.isAxiosError(err)) {
+    const msg = (err.response?.data as { message?: string } | undefined)?.message;
+    if (typeof msg === "string" && msg.length > 0) return msg;
+    if (err.message) return err.message;
+  }
+  if (err instanceof Error && err.message) return err.message;
+  return "Não foi possível ativar as notificações. Tente de novo ou use outro navegador.";
+}
+
 export function usePushNotifications(): UsePushNotifications {
+  const staticBlockReason = useMemo(() => getWebPushStaticBlockReason(), []);
+  const needsPwaInstallForPush = useMemo(() => needsPwaInstallForIosWebPush(), []);
+
   const [permission, setPermission] = useState<PushPermission>(() => {
+    if (staticBlockReason !== null) return "unsupported";
     if (!("Notification" in window)) return "unsupported";
     return Notification.permission as PushPermission;
   });
+  const [pushManagerOk, setPushManagerOk] = useState<boolean | null>(null);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Check current subscription state on mount
+  const pushCapable = useMemo(() => {
+    if (staticBlockReason !== null) return false;
+    if (pushManagerOk === false) return false;
+    if (pushManagerOk === null) return false;
+    return true;
+  }, [staticBlockReason, pushManagerOk]);
+
   useEffect(() => {
-    if (permission === "unsupported") return;
+    if (staticBlockReason !== null) {
+      setPushManagerOk(false);
+      return;
+    }
+    void (async () => {
+      const ok = await hasPushManagerAfterSwReady();
+      setPushManagerOk(ok);
+    })();
+  }, [staticBlockReason]);
+
+  // Check current subscription state on mount / when capability known
+  useEffect(() => {
+    if (permission === "unsupported" || !pushCapable) return;
 
     void (async () => {
       const reg = await getServiceWorkerRegistration();
@@ -45,23 +90,41 @@ export function usePushNotifications(): UsePushNotifications {
       const existing = await reg.pushManager.getSubscription();
       setIsSubscribed(!!existing);
     })();
-  }, [permission]);
+  }, [permission, pushCapable]);
 
   const subscribe = useCallback(async () => {
-    if (!("Notification" in window) || !("serviceWorker" in navigator)) return;
+    if (staticBlockReason !== null) {
+      throw new Error(humanMessageForBlockReason(staticBlockReason));
+    }
+    if (!pushManagerOk) {
+      throw new Error(
+        pushManagerOk === false
+          ? "Service worker ou PushManager indisponível. Recarregue a página ou use Chrome/Safari atualizado."
+          : "Ainda a preparar o serviço de notificações. Espere um momento e tente de novo."
+      );
+    }
+    if (!("Notification" in window) || !("serviceWorker" in navigator)) {
+      throw new Error("Este ambiente não suporta notificações push.");
+    }
 
     setIsLoading(true);
     try {
-      // Request notification permission
       const perm = await Notification.requestPermission();
       setPermission(perm as PushPermission);
-      if (perm !== "granted") return;
+      if (perm !== "granted") {
+        throw new Error(
+          perm === "denied"
+            ? "Permissão negada. Ative notificações nas definições do navegador ou do sistema."
+            : "Permissão de notificações não concedida."
+        );
+      }
 
       const reg = await getServiceWorkerRegistration();
-      if (!reg) throw new Error("Service worker not available");
+      if (!reg) throw new Error("Service worker não disponível. Recarregue a página.");
 
-      // Fetch VAPID public key
       const { data } = await api.get<{ publicKey: string }>("/notifications/vapid-public-key");
+      if (!data?.publicKey) throw new Error("Chave do servidor indisponível. Tente mais tarde.");
+
       const applicationServerKey = urlBase64ToUint8Array(data.publicKey);
 
       const subscription = await reg.pushManager.subscribe({
@@ -82,11 +145,11 @@ export function usePushNotifications(): UsePushNotifications {
       setIsSubscribed(true);
     } catch (err) {
       console.error("Erro ao ativar notificações:", err);
-      throw err;
+      throw new Error(messageFromSubscribeError(err));
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [staticBlockReason, pushManagerOk]);
 
   const unsubscribe = useCallback(async () => {
     setIsLoading(true);
@@ -114,5 +177,14 @@ export function usePushNotifications(): UsePushNotifications {
     }
   }, []);
 
-  return { permission, isSubscribed, isLoading, subscribe, unsubscribe };
+  return {
+    permission,
+    isSubscribed,
+    isLoading,
+    subscribe,
+    unsubscribe,
+    pushCapable,
+    staticBlockReason,
+    needsPwaInstallForPush,
+  };
 }

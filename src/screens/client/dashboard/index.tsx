@@ -34,6 +34,7 @@ import { api } from "@/services/api";
 import { useAuth } from "@/providers/AuthProvider";
 import { StaggerContainer, StaggerItem } from "@/components/ui/ScrollReveal";
 import { QRScanner } from "@/components/QRScanner";
+import { PwaInstallNudge } from "@/components/pwa/PwaInstallNudge";
 import type { ClientMembership, ClientPendingAccessRequest } from "@/types/client.types";
 import { parseClientPackagesResponse } from "@/types/client.types";
 
@@ -214,6 +215,8 @@ export const ClientDashboard = (): React.JSX.Element => {
       </Box>
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+
+      <PwaInstallNudge />
 
       <StaggerContainer>
         <Grid container spacing={2} sx={{ mb: 3 }}>

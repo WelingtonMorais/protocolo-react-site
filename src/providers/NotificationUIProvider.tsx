@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { api } from "@/services/api";
 import { useAuth } from "@/providers/AuthProvider";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import type { WebPushStaticBlockReason } from "@/utils/web-push-env";
 
 interface AppNotification {
   id: string;
@@ -19,7 +20,11 @@ interface NotificationUIContextValue {
   notifications: AppNotification[];
   notificationsLoading: boolean;
   needsPushNudge: boolean;
+  /** True quando HTTPS, SW, Notification, iOS em PWA (se iOS), e PushManager disponível. */
   pushSupported: boolean;
+  pushStaticBlockReason: WebPushStaticBlockReason;
+  /** iPhone/iPad sem app na ecrã inicial — Web Push costuma exigir instalar o Protocolo como PWA. */
+  needsIosPwaInstallHint: boolean;
   pushPermission: "default" | "granted" | "denied" | "unsupported";
   pushEnabled: boolean;
   pushBusy: boolean;
@@ -61,6 +66,8 @@ export const NotificationUIProvider = ({ children }: { children: ReactNode }): R
     isLoading: pushBusy,
     subscribe,
     unsubscribe,
+    pushCapable,
+    staticBlockReason: pushStaticBlockReason,
   } = usePushNotifications();
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
@@ -136,8 +143,11 @@ export const NotificationUIProvider = ({ children }: { children: ReactNode }): R
       hasUnread: unreadCount > 0,
       notifications,
       notificationsLoading,
-      needsPushNudge: isAuthenticated && permission !== "unsupported" && !isSubscribed,
-      pushSupported: permission !== "unsupported",
+      needsPushNudge: isAuthenticated && pushCapable && !isSubscribed,
+      pushSupported: pushCapable,
+      pushStaticBlockReason,
+      needsIosPwaInstallHint:
+        isAuthenticated && pushStaticBlockReason === "ios_needs_pwa" && !isSubscribed,
       pushPermission: permission,
       pushEnabled: isSubscribed,
       pushBusy,
@@ -156,6 +166,8 @@ export const NotificationUIProvider = ({ children }: { children: ReactNode }): R
       permission,
       isSubscribed,
       pushBusy,
+      pushCapable,
+      pushStaticBlockReason,
       refreshUnreadCount,
       refreshNotifications,
       markAsRead,
