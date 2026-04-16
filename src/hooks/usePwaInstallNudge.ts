@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { isIOSLike, isRunningAsInstalledPwa, isSecureWebContext } from "@/utils/web-push-env";
+import { isAndroidLike, isIOSLike, isRunningAsInstalledPwa, isSecureWebContext } from "@/utils/web-push-env";
 
 const STORAGE_DISMISS_KEY = "protocolo_pwa_install_nudge_dismissed";
 
@@ -14,6 +14,8 @@ export interface UsePwaInstallNudgeResult {
   visible: boolean;
   /** Browser oferece diálogo nativo (Chrome, Edge, etc.). */
   canUseNativePrompt: boolean;
+  /** Dispositivo Android sem prompt nativo — mostrar instruções manuais. */
+  isAndroidManual: boolean;
   busy: boolean;
   promptInstall: () => Promise<void>;
   dismiss: () => void;
@@ -72,17 +74,20 @@ export function usePwaInstallNudge(): UsePwaInstallNudgeResult {
 
   const secure = typeof window !== "undefined" && isSecureWebContext();
   const ios = typeof navigator !== "undefined" && isIOSLike();
+  const android = typeof navigator !== "undefined" && isAndroidLike();
   const canUseNativePrompt = deferredPrompt !== null;
   const iosManualOnly = ios && !canUseNativePrompt;
+  const androidManualOnly = android && !ios && !canUseNativePrompt;
   const visible =
     secure &&
     !installed &&
     !dismissed &&
-    (canUseNativePrompt || iosManualOnly);
+    (canUseNativePrompt || iosManualOnly || androidManualOnly);
 
   return {
     visible,
     canUseNativePrompt,
+    isAndroidManual: androidManualOnly,
     busy,
     promptInstall,
     dismiss,

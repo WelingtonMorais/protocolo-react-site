@@ -30,6 +30,11 @@ export function isIOSLike(): boolean {
   return navigator.platform === "MacIntel" && (nav.maxTouchPoints ?? 0) > 1;
 }
 
+export function isAndroidLike(): boolean {
+  if (typeof navigator === "undefined") return false;
+  return /Android/i.test(navigator.userAgent);
+}
+
 export function isRunningAsInstalledPwa(): boolean {
   if (typeof window === "undefined") return false;
   try {

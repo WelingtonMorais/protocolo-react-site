@@ -14,6 +14,7 @@ import {
   Alert,
   Stack,
   CircularProgress,
+  Chip,
 } from "@mui/material";
 import LogoutIcon from "@mui/icons-material/Logout";
 import PersonIcon from "@mui/icons-material/Person";
@@ -22,10 +23,13 @@ import ApartmentIcon from "@mui/icons-material/Apartment";
 import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
 import NotificationsOffIcon from "@mui/icons-material/NotificationsOff";
 import SupportAgentIcon from "@mui/icons-material/SupportAgent";
+import GetAppIcon from "@mui/icons-material/GetApp";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 
 import { useAuth } from "@/providers/AuthProvider";
 import { useNotificationUI } from "@/providers/NotificationUIProvider";
-import { humanMessageForBlockReason } from "@/utils/web-push-env";
+import { humanMessageForBlockReason, isRunningAsInstalledPwa } from "@/utils/web-push-env";
+import { usePwaInstallNudge } from "@/hooks/usePwaInstallNudge";
 
 export const ClientSettingsScreen = (): React.JSX.Element => {
   const { user, logout } = useAuth();
@@ -38,6 +42,9 @@ export const ClientSettingsScreen = (): React.JSX.Element => {
     disablePush,
     pushStaticBlockReason,
   } = useNotificationUI();
+
+  const { canUseNativePrompt, isAndroidManual, busy: pwaBusy, promptInstall } = usePwaInstallNudge();
+  const isPwaInstalled = isRunningAsInstalledPwa();
 
   const [pushActionError, setPushActionError] = useState<string | null>(null);
 
@@ -92,6 +99,60 @@ export const ClientSettingsScreen = (): React.JSX.Element => {
               </ListItem>
             )}
           </List>
+        </CardContent>
+      </Card>
+
+      <Card sx={{ mb: 2 }}>
+        <CardContent>
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
+            <Typography variant="h6">Instalar aplicativo</Typography>
+            {isPwaInstalled && (
+              <Chip icon={<CheckCircleIcon />} label="Instalado" color="success" size="small" />
+            )}
+          </Box>
+
+          {isPwaInstalled ? (
+            <Alert severity="success" sx={{ mb: 1 }}>
+              O Protocolo está instalado como app neste dispositivo.
+            </Alert>
+          ) : canUseNativePrompt ? (
+            <>
+              <Alert severity="info" sx={{ mb: 2 }}>
+                Instale o Protocolo na tela inicial para acesso mais rápido e melhores notificações.
+              </Alert>
+              <Button
+                variant="contained"
+                startIcon={pwaBusy ? <CircularProgress size={18} color="inherit" /> : <GetAppIcon />}
+                disabled={pwaBusy}
+                onClick={() => void promptInstall()}
+                fullWidth
+              >
+                {pwaBusy ? "Abrindo…" : "Instalar app"}
+              </Button>
+            </>
+          ) : isAndroidManual ? (
+            <>
+              <Alert severity="info" sx={{ mb: 1 }}>
+                Para instalar o Protocolo no Android:
+              </Alert>
+              <Box component="ol" sx={{ m: 0, pl: 2.5, "& li": { typography: "body2", color: "text.secondary", mb: 0.5 } }}>
+                <li>Toque no menu <strong>⋮</strong> (três pontos) no canto superior direito do Chrome.</li>
+                <li>Escolha <strong>Adicionar à tela inicial</strong>.</li>
+                <li>Confirme e abra pelo <strong>ícone novo</strong>.</li>
+              </Box>
+            </>
+          ) : (
+            <>
+              <Alert severity="info" sx={{ mb: 1 }}>
+                Para instalar no iPhone/iPad:
+              </Alert>
+              <Box component="ol" sx={{ m: 0, pl: 2.5, "& li": { typography: "body2", color: "text.secondary", mb: 0.5 } }}>
+                <li>Toque em <strong>Partilhar</strong> na barra do Safari (quadrado com seta para cima).</li>
+                <li>Escolha <strong>Adicionar à tela inicial</strong>.</li>
+                <li>Confirme e abra pelo <strong>ícone novo</strong>.</li>
+              </Box>
+            </>
+          )}
         </CardContent>
       </Card>
 

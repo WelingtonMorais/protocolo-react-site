@@ -9,7 +9,7 @@ import { usePwaInstallNudge } from "@/hooks/usePwaInstallNudge";
  * Chrome/Edge: usa beforeinstallprompt. iOS Safari: instruções manuais.
  */
 export const PwaInstallNudge = (): React.JSX.Element | null => {
-  const { visible, canUseNativePrompt, busy, promptInstall, dismiss } = usePwaInstallNudge();
+  const { visible, canUseNativePrompt, isAndroidManual, busy, promptInstall, dismiss } = usePwaInstallNudge();
 
   if (!visible) return null;
 
@@ -45,6 +45,19 @@ export const PwaInstallNudge = (): React.JSX.Element | null => {
             Abre mais rápido, fica com ícone na tela e melhora notificações no telemóvel. Toque em &quot;Instalar app&quot;
             para confirmar.
           </Typography>
+        ) : isAndroidManual ? (
+          <Box component="ol" sx={{ m: 0, pl: 2.5, "& li": { typography: "body2", color: "text.secondary" } }}>
+            <li>
+              Toque no menu <strong>⋮</strong> (três pontos) no canto superior direito do Chrome.
+            </li>
+            <li>
+              Escolha <strong>Adicionar à tela inicial</strong>.
+            </li>
+            <li>
+              Confirme. Depois abra o Protocolo pelo <strong>ícone novo</strong> — as notificações push funcionarão
+              melhor.
+            </li>
+          </Box>
         ) : (
           <Box component="ol" sx={{ m: 0, pl: 2.5, "& li": { typography: "body2", color: "text.secondary" } }}>
             <li>
