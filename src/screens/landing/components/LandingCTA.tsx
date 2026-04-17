@@ -6,6 +6,7 @@ import BoltIcon from "@mui/icons-material/Bolt";
 import PhoneAndroidIcon from "@mui/icons-material/PhoneAndroid";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import PersonAddAltOutlinedIcon from "@mui/icons-material/PersonAddAltOutlined";
+import { trackEvent } from "@/lib/analytics";
 
 const EASE_SPRING: [number, number, number, number] = [0.16, 1, 0.3, 1];
 const EASE_EXPO: [number, number, number, number] = [0.76, 0, 0.24, 1];
@@ -23,6 +24,16 @@ export const LandingCTA: React.FC = () => {
 
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
   const bgY = useTransform(scrollYProgress, [0, 1], ["-10%", "10%"]);
+
+  const goToLogin = (): void => {
+    trackEvent("cta_click", { source: "landing_cta", destination: "login" });
+    navigate("/login");
+  };
+
+  const goToRegister = (): void => {
+    trackEvent("cta_click", { source: "landing_cta", destination: "register" });
+    navigate("/cadastro");
+  };
 
   return (
     <section
@@ -207,7 +218,7 @@ export const LandingCTA: React.FC = () => {
           transition={{ duration: 0.8, ease: EASE_SPRING, delay: 0.5 }}
         >
           <motion.button
-            onClick={() => navigate("/login")}
+            onClick={goToLogin}
             style={{
               fontFamily: "'Inter', sans-serif", fontWeight: 700,
               fontSize: "0.9rem", letterSpacing: "0.04em",
@@ -227,7 +238,7 @@ export const LandingCTA: React.FC = () => {
           </motion.button>
 
           <motion.button
-            onClick={() => navigate("/cadastro")}
+            onClick={goToRegister}
             style={{
               fontFamily: "'Inter', sans-serif", fontWeight: 600,
               fontSize: "0.9rem", letterSpacing: "0.04em",
@@ -323,7 +334,11 @@ export const LandingCTA: React.FC = () => {
           {["Entrar", "Cadastrar"].map((label) => (
             <button
               key={label}
-              onClick={() => navigate(label === "Entrar" ? "/login" : "/cadastro")}
+              onClick={() => {
+                const destination = label === "Entrar" ? "login" : "register";
+                trackEvent("cta_click", { source: "landing_footer", destination });
+                navigate(label === "Entrar" ? "/login" : "/cadastro");
+              }}
               style={{
                 fontFamily: "'Inter', sans-serif",
                 fontSize: "0.78rem", fontWeight: 500,

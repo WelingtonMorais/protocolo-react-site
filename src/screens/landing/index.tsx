@@ -7,11 +7,16 @@ import { LandingFeatures } from "./components/LandingFeatures";
 import { LandingHowItWorks } from "./components/LandingHowItWorks";
 import { LandingCTA } from "./components/LandingCTA";
 import { CustomCursor } from "../../components/ui/CustomCursor";
+import { captureAcquisitionFromUrl } from "@/lib/acquisition";
+import { trackEvent } from "@/lib/analytics";
 
 export const LandingPage: React.FC = () => {
   const lenisRef = useRef<Lenis | null>(null);
 
   useEffect(() => {
+    captureAcquisitionFromUrl();
+    trackEvent("landing_view", { page: "landing" });
+
     const lenis = new Lenis({
       duration: 1.25,
       easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),

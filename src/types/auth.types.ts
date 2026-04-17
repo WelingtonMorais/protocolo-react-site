@@ -19,6 +19,7 @@ export interface RegisterClientData {
   phone: string;
   password: string;
   cpf?: string;
+  acquisition?: AcquisitionPayload;
 }
 
 export interface RegisterEmployeeData {
@@ -27,4 +28,18 @@ export interface RegisterEmployeeData {
   phone: string;
   password: string;
   cpf?: string;
+  acquisition?: AcquisitionPayload;
+}
+
+export interface AcquisitionPayload {
+  utm_source?: string;
+  utm_medium?: string;
+  utm_campaign?: string;
+  utm_term?: string;
+  utm_content?: string;
+  gclid?: string;
+  fbclid?: string;
+  landing_path?: string;
+  referrer?: string;
+  captured_at?: string;
 }

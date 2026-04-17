@@ -1,5 +1,11 @@
 import { api } from "./api";
-import type { AuthUser, LoginCredentials, RegisterClientData, RegisterEmployeeData } from "@/types/auth.types";
+import type {
+  AuthUser,
+  LoginCredentials,
+  RegisterClientData,
+  RegisterEmployeeData,
+} from "@/types/auth.types";
+import { getAcquisitionData } from "@/lib/acquisition";
 
 export interface LoginResponse {
   token: string;
@@ -14,12 +20,18 @@ export const authService = {
   },
 
   registerClient: async (data: RegisterClientData): Promise<LoginResponse> => {
-    const response = await api.post<LoginResponse>("/auth/client/register", data);
+    const response = await api.post<LoginResponse>("/auth/client/register", {
+      ...data,
+      acquisition: data.acquisition ?? getAcquisitionData() ?? undefined,
+    });
     return response.data;
   },
 
   registerEmployee: async (data: RegisterEmployeeData): Promise<LoginResponse> => {
-    const response = await api.post<LoginResponse>("/auth/employee/register", data);
+    const response = await api.post<LoginResponse>("/auth/employee/register", {
+      ...data,
+      acquisition: data.acquisition ?? getAcquisitionData() ?? undefined,
+    });
     return response.data;
   },
 

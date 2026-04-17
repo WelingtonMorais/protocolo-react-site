@@ -4,8 +4,11 @@ import { useLocation, useNavigate, Link as RouterLink } from "react-router-dom";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
+import { trackEvent, trackGoogleAdsConversion } from "@/lib/analytics";
 
 type PaymentReturnKind = "success" | "failure" | "pending";
+
+const ADS_PAYMENT_CONV_SESSION_KEY = "protocolo_gads_conv_payment_return";
 
 function parseKind(pathname: string): PaymentReturnKind {
   if (pathname.includes("/payment/failure")) return "failure";
@@ -17,6 +20,15 @@ export const PaymentReturnScreen = (): React.JSX.Element => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const kind = useMemo(() => parseKind(pathname), [pathname]);
+  React.useEffect(() => {
+    if (kind === "success") {
+      trackEvent("payment_success", { page: "payment_return" });
+      if (!sessionStorage.getItem(ADS_PAYMENT_CONV_SESSION_KEY)) {
+        sessionStorage.setItem(ADS_PAYMENT_CONV_SESSION_KEY, "1");
+        trackGoogleAdsConversion({ value: 1.0, currency: "BRL" });
+      }
+    }
+  }, [kind]);
 
   const hasSession = typeof window !== "undefined" && Boolean(localStorage.getItem("token"));
 

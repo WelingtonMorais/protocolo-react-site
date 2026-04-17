@@ -26,6 +26,7 @@ import { useAuth } from "@/providers/AuthProvider";
 import { AnimatedBackground } from "@/components/ui/AnimatedBackground";
 import type { RegisterClientData, RegisterEmployeeData } from "@/types/auth.types";
 import logoApp from "../../../assets/logo_app.png";
+import { trackEvent } from "@/lib/analytics";
 
 type ProfileType = "CLIENT" | "EMPLOYEE";
 const steps = ["Perfil", "Dados", "Pronto"];
@@ -61,6 +62,10 @@ export const RegisterScreen = (): React.JSX.Element => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  React.useEffect(() => {
+    trackEvent("register_start", { page: "register" });
+  }, []);
+
   const goNext = (): void => {
     setDirection(1);
     setActiveStep((s) => s + 1);
@@ -77,6 +82,7 @@ export const RegisterScreen = (): React.JSX.Element => {
       } else {
         await registerEmployee(data as RegisterEmployeeData);
       }
+      trackEvent("register_success", { profile });
       setDirection(1);
       setActiveStep(2);
     } catch (err: unknown) {
