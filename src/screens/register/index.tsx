@@ -24,6 +24,8 @@ import { useNavigate, Link as RouterLink } from "react-router-dom";
 
 import { useAuth } from "@/providers/AuthProvider";
 import { AnimatedBackground } from "@/components/ui/AnimatedBackground";
+import { WhatsAppIcon } from "@/components/support/WhatsAppIcon";
+import { buildWhatsAppSupportUrl } from "@/lib/whatsapp-support";
 import type { RegisterClientData, RegisterEmployeeData } from "@/types/auth.types";
 import logoApp from "../../../assets/logo_app.png";
 import { trackEvent } from "@/lib/analytics";
@@ -517,6 +519,30 @@ export const RegisterScreen = (): React.JSX.Element => {
               Já tem conta?{" "}
               <Link component={RouterLink} to="/login" sx={{ color: "primary.main", fontWeight: 700 }}>
                 Entrar
+              </Link>
+            </Typography>
+          </motion.div>
+
+          <motion.div {...fadeUp(0.65)}>
+            <Typography variant="body2" textAlign="center" color="text.secondary" sx={{ mt: 1.5 }}>
+              <Link
+                component="a"
+                href={buildWhatsAppSupportUrl("register")}
+                target="_blank"
+                rel="noopener noreferrer"
+                sx={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 0.75,
+                  color: "primary.main",
+                  fontWeight: 600,
+                  textDecoration: "none",
+                  "&:hover": { textDecoration: "underline" },
+                }}
+              >
+                <WhatsAppIcon sx={{ fontSize: 18, color: "#25D366" }} />
+                Estou com dúvida — falar com suporte
               </Link>
             </Typography>
           </motion.div>

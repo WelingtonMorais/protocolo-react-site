@@ -19,6 +19,8 @@ import { useNavigate, Link as RouterLink } from "react-router-dom";
 
 import { useAuth } from "@/providers/AuthProvider";
 import { AnimatedBackground } from "@/components/ui/AnimatedBackground";
+import { WhatsAppIcon } from "@/components/support/WhatsAppIcon";
+import { buildWhatsAppSupportUrl } from "@/lib/whatsapp-support";
 import logoApp from "../../../assets/logo_app.png";
 
 const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
@@ -450,6 +452,30 @@ export const LoginScreen = (): React.JSX.Element => {
                   sx={{ color: "primary.main", fontWeight: 700 }}
                 >
                   Cadastre-se
+                </Link>
+              </Typography>
+            </motion.div>
+
+            <motion.div {...fadeUp(0.58)}>
+              <Typography variant="body2" textAlign="center" color="text.secondary" sx={{ mt: 2 }}>
+                <Link
+                  component="a"
+                  href={buildWhatsAppSupportUrl("login")}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  sx={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 0.75,
+                    color: "primary.main",
+                    fontWeight: 600,
+                    textDecoration: "none",
+                    "&:hover": { textDecoration: "underline" },
+                  }}
+                >
+                  <WhatsAppIcon sx={{ fontSize: 18, color: "#25D366" }} />
+                  Estou com dúvida — falar com suporte
                 </Link>
               </Typography>
             </motion.div>

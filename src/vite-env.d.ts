@@ -8,6 +8,8 @@ interface ImportMetaEnv {
   /** Ex.: AW-xxx/rotuloDaConversao (Google Ads > conversões > snippet) */
   readonly VITE_GOOGLE_ADS_CONVERSION_SEND_TO?: string;
   readonly VITE_GTM_ID?: string;
+  /** DDI + DDD + número, só dígitos (ex.: 5519993148395) */
+  readonly VITE_WHATSAPP_SUPPORT_PHONE?: string;
 }
 
 interface ImportMeta {

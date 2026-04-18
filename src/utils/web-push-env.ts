@@ -83,7 +83,7 @@ export function humanMessageForBlockReason(reason: WebPushStaticBlockReason): st
     case "no_notification":
       return "Este navegador não suporta a API de notificações.";
     case "ios_needs_pwa":
-      return "No iPhone/iPad, adicione o Protocolo à ecrã inicial: Safari → Partilhar → Adicionar à ecrã principal. Depois abra pelo ícone e ative as notificações aqui.";
+      return "No iPhone/iPad, adicione o Protocolo à para inicial: Safari → Partilhar → Adicionar à tela inicial principal. Depois abra pelo ícone e ative as notificações aqui.";
     default:
       return "";
   }

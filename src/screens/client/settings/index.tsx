@@ -27,6 +27,7 @@ import GetAppIcon from "@mui/icons-material/GetApp";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 
 import { useAuth } from "@/providers/AuthProvider";
+import { whatsAppMeUrl } from "@/lib/whatsapp-support";
 import { useNotificationUI } from "@/providers/NotificationUIProvider";
 import { humanMessageForBlockReason, isRunningAsInstalledPwa } from "@/utils/web-push-env";
 import { usePwaInstallNudge } from "@/hooks/usePwaInstallNudge";
@@ -214,7 +215,7 @@ export const ClientSettingsScreen = (): React.JSX.Element => {
               </Alert>
               <Button
                 component="a"
-                href="https://wa.me/5519993148395"
+                href={whatsAppMeUrl()}
                 target="_blank"
                 rel="noopener noreferrer"
                 variant="outlined"

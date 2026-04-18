@@ -52,11 +52,11 @@ const androidSteps: Step[] = [
 const iosSteps: Step[] = [
   {
     icon: <IosShareIcon fontSize="small" />,
-    text: 'Toque no botão Partilhar (quadrado com seta ↑) na barra do Safari.',
+    text: 'Toque no menu ⋮ (três pontinhos) no canto inferior da tela do Safari e em seguida toque no botão Compartilhar (quadrado com seta ↑) na barra do Safari.',
   },
   {
     icon: <AddToHomeScreenIcon fontSize="small" />,
-    text: '"Adicionar à ecrã principal" ou "Adicionar à tela inicial".',
+    text: 'Selecione "Adicionar à tela inicial" e confirme.',
   },
   {
     icon: <CheckCircleIcon fontSize="small" />,

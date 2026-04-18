@@ -7,6 +7,7 @@ import { LandingFeatures } from "./components/LandingFeatures";
 import { LandingHowItWorks } from "./components/LandingHowItWorks";
 import { LandingCTA } from "./components/LandingCTA";
 import { CustomCursor } from "../../components/ui/CustomCursor";
+import { WhatsAppFloatingButton } from "@/components/support/WhatsAppFloatingButton";
 import { captureAcquisitionFromUrl } from "@/lib/acquisition";
 import { trackEvent } from "@/lib/analytics";
 
@@ -51,6 +52,7 @@ export const LandingPage: React.FC = () => {
         <LandingHowItWorks />
         <LandingCTA />
       </main>
+      <WhatsAppFloatingButton />
     </>
   );
 };
