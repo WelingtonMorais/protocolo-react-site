@@ -55,7 +55,7 @@ export const RegisterScreen = (): React.JSX.Element => {
 
   const [activeStep, setActiveStep] = useState(0);
   const [direction, setDirection] = useState(1);
-  const [profile, setProfile] = useState<ProfileType>("CLIENT");
+  const [profile, setProfile] = useState<ProfileType | null>(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -63,12 +63,18 @@ export const RegisterScreen = (): React.JSX.Element => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [profileWarning, setProfileWarning] = useState<string | null>(null);
 
   React.useEffect(() => {
     trackEvent("register_start", { page: "register" });
   }, []);
 
   const goNext = (): void => {
+    if (!profile) {
+      setProfileWarning("Selecione seu perfil antes de continuar.");
+      return;
+    }
+    setProfileWarning(null);
     setDirection(1);
     setActiveStep((s) => s + 1);
   };
@@ -76,6 +82,10 @@ export const RegisterScreen = (): React.JSX.Element => {
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     setError(null);
+    if (!profile) {
+      setError("Selecione o perfil para continuar com o cadastro.");
+      return;
+    }
     setLoading(true);
     try {
       const data = { name, email, phone, password };
@@ -327,16 +337,19 @@ export const RegisterScreen = (): React.JSX.Element => {
                 transition={{ duration: 0.4, ease: EASE }}
               >
                 <Typography variant="subtitle1" fontWeight={700} mb={3} sx={{ letterSpacing: "-0.01em" }}>
-                  Qual é o seu perfil?
+                Qual perfil melhor descreve você?
                 </Typography>
                 <Box sx={{ display: "flex", gap: 2, mb: 4 }}>
                   {[
-                    { value: "CLIENT" as ProfileType, icon: <HomeIcon sx={{ fontSize: 32 }} />, title: "Sou Morador", sub: "Recebo encomendas" },
-                    { value: "EMPLOYEE" as ProfileType, icon: <ApartmentIcon sx={{ fontSize: 32 }} />, title: "Sou Operador", sub: "Gerencio o condomínio" },
+                    { value: "CLIENT" as ProfileType, icon: <HomeIcon sx={{ fontSize: 32 }} />, title: "Sou Morador", sub: "Recebo, acompanho e retiro minhas encomendas" },
+                    { value: "EMPLOYEE" as ProfileType, icon: <ApartmentIcon sx={{ fontSize: 32 }} />, title: "Portaria / Administração", sub: "Registro e gerencio as encomendas do condomínio" },
                   ].map((opt) => (
                     <Box
                       key={opt.value}
-                      onClick={() => setProfile(opt.value)}
+                      onClick={() => {
+                        setProfile(opt.value);
+                        setProfileWarning(null);
+                      }}
                       sx={{
                         flex: 1,
                         display: "flex",
@@ -370,6 +383,11 @@ export const RegisterScreen = (): React.JSX.Element => {
                     </Box>
                   ))}
                 </Box>
+                {profileWarning && (
+                  <Alert severity="warning" sx={{ mb: 2, borderRadius: 2 }}>
+                    {profileWarning}
+                  </Alert>
+                )}
                 <Button variant="contained" fullWidth size="large" onClick={goNext} sx={{ height: 52 }}>
                   Continuar
                 </Button>
