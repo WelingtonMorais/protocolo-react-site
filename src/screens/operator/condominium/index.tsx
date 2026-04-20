@@ -1,5 +1,4 @@
-import React from "react";
-import { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Card,
@@ -19,6 +18,7 @@ import ApartmentIcon from "@mui/icons-material/Apartment";
 
 import { api } from "@/services/api";
 import { QRDisplay } from "@/components/QRDisplay";
+import { OperatorGreetingCard } from "@/components/operator/OperatorGreetingCard";
 import type { Condominium } from "@/types/operator.types";
 
 /** API Prisma usa `joinCode`; a UI usa `code` para o convite. */
@@ -43,27 +43,12 @@ function mapCondoFromApi(data: CondoApiPayload | null | undefined): Condominium 
 
 async function copyTextToClipboard(text: string): Promise<boolean> {
   if (!text) return false;
-  if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
-    try {
-      await navigator.clipboard.writeText(text);
-      return true;
-    } catch {
-      /* tenta fallback */
-    }
+  if (!navigator.clipboard?.writeText) {
+    return false;
   }
   try {
-    const ta = document.createElement("textarea");
-    ta.value = text;
-    ta.setAttribute("readonly", "");
-    ta.style.position = "fixed";
-    ta.style.opacity = "0";
-    ta.style.left = "-9999px";
-    document.body.appendChild(ta);
-    ta.focus();
-    ta.select();
-    const ok = document.execCommand("copy");
-    document.body.removeChild(ta);
-    return ok;
+    await navigator.clipboard.writeText(text);
+    return true;
   } catch {
     return false;
   }
@@ -187,79 +172,82 @@ export const CondominiumScreen = (): React.JSX.Element => {
           </CardContent>
         </Card>
       ) : (
-        <Card>
-          <CardContent>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
-              <ApartmentIcon sx={{ fontSize: 40, color: "primary.main" }} />
-              <Box>
-                <Typography variant="h6">{condominium.name}</Typography>
-                {condominium.address && (
-                  <Typography variant="body2" color="text.secondary">
-                    {condominium.address}
-                  </Typography>
+        <>
+          {condominium.code && <OperatorGreetingCard joinCode={condominium.code} />}
+          <Card>
+            <CardContent>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
+                <ApartmentIcon sx={{ fontSize: 40, color: "primary.main" }} />
+                <Box>
+                  <Typography variant="h6">{condominium.name}</Typography>
+                  {condominium.address && (
+                    <Typography variant="body2" color="text.secondary">
+                      {condominium.address}
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
+
+              <Divider sx={{ mb: 3 }} />
+
+              <Typography variant="subtitle2" mb={1}>Código de convite</Typography>
+              <Typography variant="body2" color="text.secondary" mb={2}>
+                Os moradores usam este código no aplicativo para pedir vínculo ao condomínio. Envie por mensagem
+                ou peça para escanear o QR Code abaixo (mesmo código).
+              </Typography>
+
+              <TextField
+                fullWidth
+                label="Código para colar ou ler"
+                value={condominium.code}
+                onClick={(e) => (e.target as HTMLInputElement).select?.()}
+                InputProps={{
+                  readOnly: true,
+                  sx: {
+                    fontFamily: "monospace",
+                    fontSize: "1.1rem",
+                    fontWeight: 700,
+                    letterSpacing: "0.12em",
+                  },
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <Tooltip title={copied ? "Copiado!" : "Copiar código"}>
+                        <span>
+                          <IconButton
+                            edge="end"
+                            onClick={handleCopy}
+                            disabled={!condominium.code}
+                            aria-label="Copiar código de convite"
+                            color={copied ? "success" : "default"}
+                          >
+                            <ContentCopyIcon fontSize="small" />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{ mb: 1 }}
+              />
+              <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 3 }}>
+                Dica: toque no campo para selecionar tudo, ou use o ícone de copiar à direita.
+              </Typography>
+
+              <Typography variant="subtitle2" mb={1}>QR Code</Typography>
+              <Typography variant="body2" color="text.secondary" mb={2}>
+                Quadrado em branco com padrão preto: é o QR com o mesmo código, para o morador escanear no celular
+                (se o app oferecer leitura por câmera).
+              </Typography>
+              <Box sx={{ display: "flex", justifyContent: "center" }}>
+                {condominium.code ? (
+                  <QRDisplay value={condominium.code} size={200} />
+                ) : (
+                  <Typography color="text.secondary">Código não disponível para gerar QR.</Typography>
                 )}
               </Box>
-            </Box>
-
-            <Divider sx={{ mb: 3 }} />
-
-            <Typography variant="subtitle2" mb={1}>Código de convite</Typography>
-            <Typography variant="body2" color="text.secondary" mb={2}>
-              Os moradores usam este código no aplicativo para pedir vínculo ao condomínio. Envie por mensagem
-              ou peça para escanear o QR Code abaixo (mesmo código).
-            </Typography>
-
-            <TextField
-              fullWidth
-              label="Código para colar ou ler"
-              value={condominium.code}
-              onClick={(e) => (e.target as HTMLInputElement).select?.()}
-              InputProps={{
-                readOnly: true,
-                sx: {
-                  fontFamily: "monospace",
-                  fontSize: "1.1rem",
-                  fontWeight: 700,
-                  letterSpacing: "0.12em",
-                },
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <Tooltip title={copied ? "Copiado!" : "Copiar código"}>
-                      <span>
-                        <IconButton
-                          edge="end"
-                          onClick={handleCopy}
-                          disabled={!condominium.code}
-                          aria-label="Copiar código de convite"
-                          color={copied ? "success" : "default"}
-                        >
-                          <ContentCopyIcon fontSize="small" />
-                        </IconButton>
-                      </span>
-                    </Tooltip>
-                  </InputAdornment>
-                ),
-              }}
-              sx={{ mb: 1 }}
-            />
-            <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 3 }}>
-              Dica: toque no campo para selecionar tudo, ou use o ícone de copiar à direita.
-            </Typography>
-
-            <Typography variant="subtitle2" mb={1}>QR Code</Typography>
-            <Typography variant="body2" color="text.secondary" mb={2}>
-              Quadrado em branco com padrão preto: é o QR com o mesmo código, para o morador escanear no celular
-              (se o app oferecer leitura por câmera).
-            </Typography>
-            <Box sx={{ display: "flex", justifyContent: "center" }}>
-              {condominium.code ? (
-                <QRDisplay value={condominium.code} size={200} />
-              ) : (
-                <Typography color="text.secondary">Código não disponível para gerar QR.</Typography>
-              )}
-            </Box>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </>
       )}
     </Box>
   );

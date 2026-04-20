@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Card,
@@ -31,6 +31,14 @@ import { whatsAppMeUrl } from "@/lib/whatsapp-support";
 import { useNotificationUI } from "@/providers/NotificationUIProvider";
 import { humanMessageForBlockReason, isRunningAsInstalledPwa } from "@/utils/web-push-env";
 import { usePwaInstallNudge } from "@/hooks/usePwaInstallNudge";
+import { api } from "@/services/api";
+import { OperatorGreetingCard } from "@/components/operator/OperatorGreetingCard";
+
+type CondoApiPayload = {
+  id: string;
+  joinCode?: string;
+  code?: string;
+};
 
 export const ClientSettingsScreen = (): React.JSX.Element => {
   const { user, logout } = useAuth();
@@ -48,6 +56,23 @@ export const ClientSettingsScreen = (): React.JSX.Element => {
   const isPwaInstalled = isRunningAsInstalledPwa();
 
   const [pushActionError, setPushActionError] = useState<string | null>(null);
+  const [operatorJoinCode, setOperatorJoinCode] = useState<string>("");
+
+  useEffect(() => {
+    if (user?.role !== "EMPLOYEE") return;
+
+    const loadCondominium = async (): Promise<void> => {
+      try {
+        const response = await api.get<CondoApiPayload | null>("/employee/condominiums/me");
+        const joinCode = (response.data?.joinCode ?? response.data?.code ?? "").trim();
+        setOperatorJoinCode(joinCode);
+      } catch {
+        setOperatorJoinCode("");
+      }
+    };
+
+    void loadCondominium();
+  }, [user?.role, user?.condominiumId]);
 
   const pushStatusText = !pushSupported
     ? pushStaticBlockReason
@@ -67,6 +92,10 @@ export const ClientSettingsScreen = (): React.JSX.Element => {
   return (
     <Box sx={{ maxWidth: 480, mx: "auto" }}>
       <Typography variant="h5" mb={3}>Configurações</Typography>
+
+      {user?.role === "EMPLOYEE" && operatorJoinCode && (
+        <OperatorGreetingCard joinCode={operatorJoinCode} />
+      )}
 
       <Card sx={{ mb: 2 }}>
         <CardContent>
