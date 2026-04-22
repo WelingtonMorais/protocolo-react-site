@@ -1,5 +1,5 @@
-import React, { lazy, Suspense, useState } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import React, { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { CircularProgress, Box } from "@mui/material";
 
 import { RootLayout } from "./app/RootLayout";
@@ -7,6 +7,7 @@ import { DashboardLayout } from "./app/DashboardLayout";
 import { PrivateRoute } from "./components/PrivateRoute";
 import { RoleRoute } from "./components/RoleRoute";
 import { SplashScreen } from "./components/SplashScreen";
+import { trackEvent } from "./lib/analytics";
 
 // Landing page
 const LandingPage = lazy(() =>
@@ -106,6 +107,17 @@ const App = (): React.JSX.Element => {
   const [splashVisible, setSplashVisible] = useState<boolean>(
     () => !sessionStorage.getItem(SPLASH_KEY)
   );
+  const location = useLocation();
+  const dashboardTrackedRef = useRef<boolean>(false);
+
+  useEffect(() => {
+    if (dashboardTrackedRef.current) return;
+    if (!location.pathname.includes("/dashboard")) return;
+
+    dashboardTrackedRef.current = true;
+    // Keep dashboard access as a secondary navigation metric, not as conversion.
+    trackEvent("dashboard_view", { path: location.pathname });
+  }, [location.pathname]);
 
   return (
     <>

@@ -3,6 +3,7 @@ type FunnelEventName =
   | "cta_click"
   | "register_start"
   | "register_success"
+  | "dashboard_view"
   | "payment_success";
 
 type EventParams = Record<string, string | number | boolean | null | undefined>;
@@ -37,6 +38,11 @@ export function initAnalytics(): void {
   if (initialized || typeof window === "undefined") return;
 
   window.dataLayer = window.dataLayer ?? [];
+
+  // Surface missing GTM config in production builds, where tag orchestration should happen.
+  if (!GTM_ID && import.meta.env.PROD) {
+    console.warn("[analytics] VITE_GTM_ID is empty in production; GTM container is not loaded.");
+  }
 
   if (GTM_ID) {
     injectScript(`https://www.googletagmanager.com/gtm.js?id=${GTM_ID}`);

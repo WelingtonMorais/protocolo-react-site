@@ -51,6 +51,18 @@
 - Janela de conversão inicial: 30 dias.
 - Após volume mínimo, avaliar migração para `Maximizar conversões`.
 
+## 6.1) Configuração GTM para cadastro concluído (primária de aquisição)
+- Garantir `VITE_GTM_ID` definido no build de produção.
+- No GTM, criar **Custom Event Trigger** com `Event name = register_success`.
+- Criar tag de conversão Google Ads para cadastro (`signup_success`) usando esse trigger.
+- Manter regra por URL `/dashboard` apenas como apoio de navegação (não usar como conversão primária).
+- Validar em **Preview**:
+  - Landing abre: `landing_view`
+  - CTA clicado: `cta_click`
+  - Formulário iniciou: `register_start`
+  - Cadastro concluiu: `register_success`
+  - Primeiro acesso ao painel (secundário): `dashboard_view`
+
 ## 7) Critérios de decisão (semana a semana)
 - Pausar termo que gastar acima do limite definido sem gerar `register_success`.
 - Escalar termos com melhor taxa de `register_success -> payment_success`.
