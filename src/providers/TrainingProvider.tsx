@@ -19,6 +19,7 @@ interface TrainingContextValue {
   goToCurrentStep: () => void;
   completeTraining: () => Promise<void>;
   clientWelcomeOpen: boolean;
+  openClientWelcome: () => void;
   closeClientWelcome: () => void;
 }
 
@@ -104,8 +105,8 @@ export const TrainingProvider = ({ children }: { children: ReactNode }): React.J
       setClientWelcomeOpen(false);
       return;
     }
-    const sessionKey = `client-welcome-shown:${user.id}`;
-    const alreadyShown = sessionStorage.getItem(sessionKey) === "1";
+    const storageKey = `protocolo:client-first-dashboard-shown:${user.id}`;
+    const alreadyShown = localStorage.getItem(storageKey) === "1";
     if (alreadyShown) return;
 
     void (async () => {
@@ -114,7 +115,7 @@ export const TrainingProvider = ({ children }: { children: ReactNode }): React.J
         .then((r) => r.data)
         .catch(() => null);
       if (Array.isArray(memberships) && memberships.length > 0) {
-        sessionStorage.setItem(sessionKey, "1");
+        localStorage.setItem(storageKey, "1");
         return;
       }
       setClientWelcomeOpen(true);
@@ -172,9 +173,15 @@ export const TrainingProvider = ({ children }: { children: ReactNode }): React.J
   }, []);
 
   const closeClientWelcome = useCallback((): void => {
-    if (user?.id) sessionStorage.setItem(`client-welcome-shown:${user.id}`, "1");
+    if (user?.id) {
+      localStorage.setItem(`protocolo:client-first-dashboard-shown:${user.id}`, "1");
+    }
     setClientWelcomeOpen(false);
   }, [user?.id]);
+
+  const openClientWelcome = useCallback((): void => {
+    setClientWelcomeOpen(true);
+  }, []);
 
   const value = useMemo<TrainingContextValue>(
     () => ({
@@ -187,6 +194,7 @@ export const TrainingProvider = ({ children }: { children: ReactNode }): React.J
       goToCurrentStep,
       completeTraining,
       clientWelcomeOpen,
+      openClientWelcome,
       closeClientWelcome,
     }),
     [
@@ -198,6 +206,7 @@ export const TrainingProvider = ({ children }: { children: ReactNode }): React.J
       goToCurrentStep,
       completeTraining,
       clientWelcomeOpen,
+      openClientWelcome,
       closeClientWelcome,
     ]
   );

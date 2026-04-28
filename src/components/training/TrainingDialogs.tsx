@@ -1,8 +1,10 @@
 import React from "react";
-import { Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from "@mui/material";
+import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
 import { useAuth } from "@/providers/AuthProvider";
 import { useTraining } from "@/providers/TrainingProvider";
+import { FirstAccessClientDialog } from "@/screens/client/dashboard/components/FirstAccessClientDialog";
 
 const STEP_TEXT: Record<number, { title: string; body: string; cta: string }> = {
   0: {
@@ -39,6 +41,7 @@ const STEP_TEXT: Record<number, { title: string; body: string; cta: string }> = 
 
 export const TrainingDialogs = (): React.JSX.Element | null => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const {
     training,
     operatorStep,
@@ -55,6 +58,16 @@ export const TrainingDialogs = (): React.JSX.Element | null => {
 
   const isOperator = user.role === "EMPLOYEE" || user.role === "ADMIN";
   const stepConfig = STEP_TEXT[operatorStep] ?? STEP_TEXT[0];
+
+  const handleOpenReferralFromModal = (): void => {
+    closeClientWelcome();
+    navigate("/morador/dashboard?welcome_action=referral");
+  };
+
+  const handleOpenLinkFromModal = (): void => {
+    closeClientWelcome();
+    navigate("/morador/dashboard?welcome_action=link");
+  };
 
   return (
     <>
@@ -91,24 +104,13 @@ export const TrainingDialogs = (): React.JSX.Element | null => {
       )}
 
       {user.role === "CLIENT" && (
-        <Dialog open={clientWelcomeOpen} onClose={closeClientWelcome} maxWidth="sm" fullWidth>
-          <DialogTitle>Bem-vindo(a) ao Protocolo Encomendas</DialogTitle>
-          <DialogContent>
-            <Box sx={{ display: "grid", gap: 2 }}>
-              <Typography variant="body1">
-                Para vincular ao condominio, voce precisa do QR code ou codigo de convite da portaria, sindico ou administracao.
-              </Typography>
-              <Alert severity="success">
-                Seu sindico ainda nao usa? Convide agora: testar o app e o melhor jeito de conhecer e melhorar a rotina do condominio.
-              </Alert>
-            </Box>
-          </DialogContent>
-          <DialogActions>
-            <Button variant="contained" onClick={closeClientWelcome}>
-              Entendi
-            </Button>
-          </DialogActions>
-        </Dialog>
+        <FirstAccessClientDialog
+          open={clientWelcomeOpen}
+          onClose={closeClientWelcome}
+          userName={user.name}
+          onOpenReferralForm={handleOpenReferralFromModal}
+          onOpenLink={handleOpenLinkFromModal}
+        />
       )}
     </>
   );

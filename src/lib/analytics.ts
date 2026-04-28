@@ -4,7 +4,12 @@ type FunnelEventName =
   | "register_start"
   | "register_success"
   | "dashboard_view"
-  | "payment_success";
+  | "payment_success"
+  | "client_first_modal_view"
+  | "client_first_modal_cta"
+  | "referral_whatsapp_share"
+  | "referral_lead_submit"
+  | "referral_lead_success";
 
 type EventParams = Record<string, string | number | boolean | null | undefined>;
 

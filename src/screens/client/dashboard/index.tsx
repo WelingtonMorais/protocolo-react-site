@@ -27,15 +27,18 @@ import AddHomeIcon from "@mui/icons-material/AddHome";
 import ApartmentIcon from "@mui/icons-material/Apartment";
 import HistoryIcon from "@mui/icons-material/History";
 import QrCodeScannerIcon from "@mui/icons-material/QrCodeScanner";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
 
 import { api } from "@/services/api";
 import { useAuth } from "@/providers/AuthProvider";
+import { useTraining } from "@/providers/TrainingProvider";
 import { StaggerContainer, StaggerItem } from "@/components/ui/ScrollReveal";
 import { QRScanner } from "@/components/QRScanner";
 import type { ClientMembership, ClientPendingAccessRequest } from "@/types/client.types";
 import { parseClientPackagesResponse } from "@/types/client.types";
+import { PreCondoHero } from "./components/PreCondoHero";
+import { ReferralLeadDialog } from "./components/ReferralLeadDialog";
 
 function onlyCpfDigits(raw: string): string {
   return raw.replace(/\D/g, "").slice(0, 11);
@@ -69,7 +72,9 @@ function normalizeCondoInviteCode(raw: string): string {
 
 export const ClientDashboard = (): React.JSX.Element => {
   const { user } = useAuth();
+  const { openClientWelcome } = useTraining();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [memberships, setMemberships] = useState<ClientMembership[]>([]);
   const [pendingAccess, setPendingAccess] = useState<ClientPendingAccessRequest[]>([]);
@@ -86,6 +91,7 @@ export const ClientDashboard = (): React.JSX.Element => {
   const [linkLoading, setLinkLoading] = useState(false);
   const [linkError, setLinkError] = useState<string | null>(null);
   const [linkScannerOpen, setLinkScannerOpen] = useState(false);
+  const [referralDialogOpen, setReferralDialogOpen] = useState(false);
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string }>({
     open: false,
     message: "",
@@ -152,6 +158,21 @@ export const ClientDashboard = (): React.JSX.Element => {
     void refetch();
   }, []);
 
+  useEffect(() => {
+    const action = searchParams.get("welcome_action");
+    if (!action) return;
+    if (action === "referral") {
+      setReferralDialogOpen(true);
+    } else if (action === "link") {
+      openLinkDialog();
+    }
+    const next = new URLSearchParams(searchParams);
+    next.delete("welcome_action");
+    setSearchParams(next, { replace: true });
+    // openLinkDialog is stable inside this component scope
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
   const handleResolveCode = async (): Promise<void> => {
     setLinkError(null);
     setLinkLoading(true);
@@ -214,6 +235,16 @@ export const ClientDashboard = (): React.JSX.Element => {
       </Box>
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+
+      {!loading && memberships.length === 0 && (
+        <PreCondoHero
+          userName={user?.name}
+          hasPendingAccess={pendingAccess.length > 0}
+          onOpenLink={openLinkDialog}
+          onOpenReferral={() => setReferralDialogOpen(true)}
+          onReopenWelcome={openClientWelcome}
+        />
+      )}
 
       <StaggerContainer>
         <Grid container spacing={2} sx={{ mb: 3 }}>
@@ -454,6 +485,20 @@ export const ClientDashboard = (): React.JSX.Element => {
         open={linkScannerOpen}
         onClose={() => setLinkScannerOpen(false)}
         onScan={handleCondoQrScan}
+      />
+
+      <ReferralLeadDialog
+        open={referralDialogOpen}
+        onClose={() => setReferralDialogOpen(false)}
+        userName={user?.name}
+        source="hero"
+        onSuccess={() => {
+          setSnackbar({
+            open: true,
+            message:
+              "Recebemos! Nosso time vai falar com seu síndico nas próximas horas.",
+          });
+        }}
       />
 
       <Snackbar
