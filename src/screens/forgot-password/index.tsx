@@ -24,6 +24,7 @@ export const ForgotPasswordScreen = (): React.JSX.Element => {
   const [step, setStep] = useState<Step>("cpf");
   const [cpf, setCpf] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [token, setToken] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -53,7 +54,7 @@ export const ForgotPasswordScreen = (): React.JSX.Element => {
     setError(null);
     setLoading(true);
     try {
-      const result = await authService.validatePasswordRecovery({ cpf, email });
+      const result = await authService.validatePasswordRecovery({ cpf, email, phone });
       setToken(result.token);
       setStep("reset");
     } catch {
@@ -68,7 +69,7 @@ export const ForgotPasswordScreen = (): React.JSX.Element => {
     setError(null);
     setLoading(true);
     try {
-      await authService.resetPassword({ token, password: newPassword });
+      await authService.resetPassword({ token, newPassword });
       setStep("done");
     } catch {
       setError("Erro ao redefinir senha. Tente novamente.");
@@ -127,7 +128,7 @@ export const ForgotPasswordScreen = (): React.JSX.Element => {
           </Typography>
           <Typography variant="body2" color="text.secondary" mb={3}>
             {step === "cpf" && "Informe seu CPF cadastrado"}
-            {step === "validate" && "Confirme seu e-mail"}
+            {step === "validate" && "Confirme e-mail e telefone cadastrados"}
             {step === "reset" && "Crie sua nova senha"}
             {step === "done" && "Senha alterada com sucesso!"}
           </Typography>
@@ -165,8 +166,19 @@ export const ForgotPasswordScreen = (): React.JSX.Element => {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                sx={{ mb: 2 }}
+                size="medium"
+              />
+              <TextField
+                label="Telefone cadastrado"
+                fullWidth
+                required
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
                 sx={{ mb: 3 }}
                 size="medium"
+                placeholder="DDD + número"
+                helperText="Mesmo número usado no cadastro (com ou sem máscara)."
               />
               <Button type="submit" variant="contained" fullWidth size="large" disabled={loading} sx={{ height: 52 }}>
                 {loading ? "Validando..." : "Validar"}

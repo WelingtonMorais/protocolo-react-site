@@ -36,23 +36,22 @@ export const authService = {
   },
 
   checkCpf: async (cpf: string): Promise<{ exists: boolean }> => {
-    const response = await api.get<{ exists: boolean }>(`/auth/check-user-cpf?cpf=${cpf}`);
+    const response = await api.get<{ exists: boolean }>(
+      `/auth/check-user-cpf?cpf=${encodeURIComponent(cpf)}`,
+    );
     return response.data;
   },
 
   validatePasswordRecovery: async (data: {
     cpf: string;
-    email?: string;
-    phone?: string;
+    email: string;
+    phone: string;
   }): Promise<{ token: string }> => {
     const response = await api.post<{ token: string }>("/auth/validate-password-recovery", data);
     return response.data;
   },
 
-  resetPassword: async (data: {
-    token: string;
-    password: string;
-  }): Promise<void> => {
+  resetPassword: async (data: { token: string; newPassword: string }): Promise<void> => {
     await api.post("/auth/reset-password", data);
   },
 };
